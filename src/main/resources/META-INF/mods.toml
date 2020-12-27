@@ -1,0 +1,29 @@
+modLoader="javafml"
+loaderVersion="[35,)"
+license="MIT"
+#issueTrackerURL="http://my.issue.tracker/"
+[[mods]]
+modId="hopshel"
+version="1.16.4-0.0.1.0"
+displayName="Hopshel"
+#updateJSONURL="http://myurl.me/"
+#displayURL="http://example.com/"
+#logoFile="examplemod.png"
+credits="u/MoronicLife for the idea (https://www.reddit.com/r/minecraftsuggestions/comments/iv0g2j)"
+authors="nbrichau"
+description='''
+The Hopshel, a unique end familiar for all playstyles!
+'''
+
+[[dependencies.hopshel]]
+	modId="forge"
+	mandatory=true
+	versionRange="[35,)"
+	ordering="NONE"
+	side="BOTH"
+[[dependencies.hopshel]]
+	modId="minecraft"
+	mandatory=true
+	versionRange="[1.16.4,1.17)"
+	ordering="NONE"
+	side="BOTH"
