@@ -40,10 +40,10 @@ public class HopshelEntity extends AnimalEntity {
 	@Override
 	protected void registerGoals() {
 		super.registerGoals();
-		this.goalSelector.addGoal(1, new SwimGoal(this));
-		this.goalSelector.addGoal(6, new WaterAvoidingRandomWalkingGoal(this, 0.7D));
-		this.goalSelector.addGoal(7, new LookAtGoal(this, PlayerEntity.class, 6.0F));
-		this.goalSelector.addGoal(8, new LookRandomlyGoal(this));
+		goalSelector.addGoal(1, new SwimGoal(this));
+		goalSelector.addGoal(6, new WaterAvoidingRandomWalkingGoal(this, 0.7D));
+		goalSelector.addGoal(7, new LookAtGoal(this, PlayerEntity.class, 6.0F));
+		goalSelector.addGoal(8, new LookRandomlyGoal(this));
 	}
 
 	public static AttributeModifierMap.MutableAttribute registerAttributes() {
@@ -64,9 +64,7 @@ public class HopshelEntity extends AnimalEntity {
 		ItemStack itemStack = playerEntity.getHeldItem(handIn);
 		if (itemStack.getItem() == Items.STICK) {
 			if (!world.isRemote()) {
-//				System.out.println("before shield : " + isShielding());
-				changeShielding();
-//				System.out.println("current shield : " + isShielding());
+				this.changeShielding();
 			}
 			return ActionResultType.SUCCESS;
 		}
@@ -75,9 +73,7 @@ public class HopshelEntity extends AnimalEntity {
 
 	public boolean attackEntityFrom(DamageSource source, float amount) {
 		if (!world.isRemote()) {
-//			System.out.println("attacked shielding : " + isShielding());
-			changeShielding();
-//			System.out.println("attacked shielding after: " + isShielding());
+			this.changeShielding();
 		}
 		return super.attackEntityFrom(source, amount);
 	}
@@ -85,6 +81,6 @@ public class HopshelEntity extends AnimalEntity {
 	@Override
 	protected void registerData() {
 		super.registerData();
-		this.dataManager.register(SHIELDING, false);
+		dataManager.register(SHIELDING, false);
 	}
 }

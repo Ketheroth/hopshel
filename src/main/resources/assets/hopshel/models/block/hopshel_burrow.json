@@ -1,0 +1,8 @@
+{
+	"parent": "minecraft:block/cube_bottom_top",
+	"textures": {
+		"top": "hopshel:block/hopshel_burrow",
+		"bottom": "hopshel:block/endstone_gravel",
+		"side": "hopshel:block/endstone_gravel"
+	}
+}
