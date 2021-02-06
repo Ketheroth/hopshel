@@ -1,9 +1,12 @@
 package com.nbrichau.hopshel.world.gen.feature;
 
 import com.mojang.serialization.Codec;
+import com.nbrichau.hopshel.HopshelMod;
 import com.nbrichau.hopshel.block.ModBlocks;
+import com.nbrichau.hopshel.entity.HopshelEntity;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
+import net.minecraft.entity.SpawnReason;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.ISeedReader;
 import net.minecraft.world.gen.ChunkGenerator;
@@ -22,7 +25,7 @@ public class HopshelBurrowFeature extends Feature<NoFeatureConfig> {
 	public boolean generate(ISeedReader reader, ChunkGenerator generator, Random rand, BlockPos pos, NoFeatureConfig config) {
 		if (reader.getBlockState(pos).getBlock().matchesBlock(Blocks.AIR) && reader.getBlockState(pos.down()).getBlock().matchesBlock(Blocks.END_STONE)) {
 			BlockPos posBurrow = pos.down();
-			System.out.println("I generate : " + posBurrow.getCoordinatesAsString());
+			HopshelMod.LOGGER.debug("Generation of the feature at position : " + posBurrow.getCoordinatesAsString());
 			BlockState hopshel_burrow = ModBlocks.hopshel_burrow.get().getDefaultState();
 			BlockState endstone_gravel = ModBlocks.endstone_gravel.get().getDefaultState();
 			/*       Sz
@@ -88,8 +91,23 @@ public class HopshelBurrowFeature extends Feature<NoFeatureConfig> {
 				this.tryPlaceBlockUp(reader, posBurrow.add(-3, 0, 2), endstone_gravel);
 				this.tryPlaceBlockUp(reader, posBurrow.add(-2, 0, 3), endstone_gravel);
 			}
+			this.spawnHopshel(reader, posBurrow, rand);
+			return true;
 		}
 		return false;
+	}
+
+	private void spawnHopshel(ISeedReader world, BlockPos pos, Random rand) {
+		BlockPos offset = pos.up();
+		for (int i = 0; i < rand.nextInt(2); i++) {
+			HopshelEntity hopshel = HopshelMod.HOPSHEL_ENTITY.get().create(world.getWorld());
+			if (hopshel != null) {
+				hopshel.setLocationAndAngles(offset.getX() + 0.5F, offset.getY() + 0.1F, offset.getZ() + 0.5F, 0.0F, 0.0F);
+				hopshel.onInitialSpawn(world, world.getDifficultyForLocation(offset), SpawnReason.STRUCTURE, null, null);
+				hopshel.setBurrowPos(pos);
+				world.addEntity(hopshel);
+			}
+		}
 	}
 
 	private void tryPlaceBlockUp(ISeedReader world, BlockPos pos, BlockState blockState) {

@@ -11,6 +11,7 @@ import net.minecraft.item.Item;
 import net.minecraft.item.ItemGroup;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
+import net.minecraft.tileentity.TileEntityType;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.registry.Registry;
 import net.minecraft.util.registry.WorldGenRegistries;
@@ -32,24 +33,25 @@ import net.minecraftforge.fml.event.lifecycle.FMLCommonSetupEvent;
 import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
 import net.minecraftforge.registries.DeferredRegister;
 import net.minecraftforge.registries.ForgeRegistries;
-//import org.apache.logging.log4j.LogManager;
-//import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 @Mod("hopshel")
 public class HopshelMod {
-//	private static final Logger LOGGER = LogManager.getLogger();
+	public static final Logger LOGGER = LogManager.getLogger();
 	public static final String MODID = "hopshel";
 
 	public static final DeferredRegister<Block> BLOCKS = DeferredRegister.create(ForgeRegistries.BLOCKS, MODID);
 	public static final DeferredRegister<Item> ITEMS = DeferredRegister.create(ForgeRegistries.ITEMS, MODID);
 	public static final DeferredRegister<EntityType<?>> ENTITY_TYPES = DeferredRegister.create(ForgeRegistries.ENTITIES, MODID);
+	public static final DeferredRegister<TileEntityType<?>> TILES = DeferredRegister.create(ForgeRegistries.TILE_ENTITIES, MODID);
 
 	public static final RegistryObject<EntityType<HopshelEntity>> HOPSHEL_ENTITY = ENTITY_TYPES
 			.register("hopshel", () -> EntityType.Builder.create(HopshelEntity::new, EntityClassification.CREATURE)
 					.size(0.5F, 0.5F)
 					.build(new ResourceLocation(MODID, "hopshel").toString()));
 
-	public static final ConfiguredFeature<?, ?> hopshel_burrow_configured = new HopshelBurrowFeature(NoFeatureConfig.field_236558_a_).withConfiguration(IFeatureConfig.NO_FEATURE_CONFIG).withPlacement(Features.Placements.HEIGHTMAP_PLACEMENT).withPlacement(Placement.COUNT_NOISE.configure(new NoiseDependant(-0.9, 1, 0)));
+	public static final ConfiguredFeature<?, ?> hopshel_burrow_configured = new HopshelBurrowFeature(NoFeatureConfig.field_236558_a_).withConfiguration(IFeatureConfig.NO_FEATURE_CONFIG).withPlacement(Features.Placements.HEIGHTMAP_PLACEMENT).withPlacement(Placement.COUNT_NOISE.configure(new NoiseDependant(-0.8, 1, 0)));
 
 	public HopshelMod() {
 		final IEventBus modEventBus = FMLJavaModLoadingContext.get().getModEventBus();
@@ -60,6 +62,7 @@ public class HopshelMod {
 		ENTITY_TYPES.register(modEventBus);
 		BLOCKS.register(modEventBus);
 		ITEMS.register(modEventBus);
+		TILES.register(modEventBus);
 
 
 		MinecraftForge.EVENT_BUS.register(this);
