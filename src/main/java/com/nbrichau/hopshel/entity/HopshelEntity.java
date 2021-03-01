@@ -1,6 +1,8 @@
 package com.nbrichau.hopshel.entity;
 
+import com.google.common.collect.ImmutableSet;
 import com.nbrichau.hopshel.block.ModBlocks;
+import com.nbrichau.hopshel.inventory.container.HopshelContainer;
 import com.nbrichau.hopshel.tileentity.BurrowTileEntity;
 import net.minecraft.entity.*;
 import net.minecraft.entity.ai.RandomPositionGenerator;
@@ -9,8 +11,10 @@ import net.minecraft.entity.ai.attributes.Attributes;
 import net.minecraft.entity.ai.goal.*;
 import net.minecraft.entity.passive.AnimalEntity;
 import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.item.ItemStack;
-import net.minecraft.item.Items;
+import net.minecraft.entity.player.PlayerInventory;
+import net.minecraft.entity.player.ServerPlayerEntity;
+import net.minecraft.inventory.container.Container;
+import net.minecraft.inventory.container.INamedContainerProvider;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.nbt.NBTUtil;
 import net.minecraft.network.datasync.DataParameter;
@@ -19,10 +23,12 @@ import net.minecraft.network.datasync.EntityDataManager;
 import net.minecraft.pathfinding.Path;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.ActionResultType;
-import net.minecraft.util.DamageSource;
+import net.minecraft.util.Direction;
 import net.minecraft.util.Hand;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.vector.Vector3d;
+import net.minecraft.util.text.ITextComponent;
+import net.minecraft.util.text.TranslationTextComponent;
 import net.minecraft.village.PointOfInterest;
 import net.minecraft.village.PointOfInterestManager;
 import net.minecraft.village.PointOfInterestType;
@@ -30,18 +36,26 @@ import net.minecraft.world.DifficultyInstance;
 import net.minecraft.world.IServerWorld;
 import net.minecraft.world.World;
 import net.minecraft.world.server.ServerWorld;
-import net.minecraftforge.eventbus.api.SubscribeEvent;
+import net.minecraftforge.common.capabilities.Capability;
+import net.minecraftforge.common.util.LazyOptional;
+import net.minecraftforge.fml.network.NetworkHooks;
+import net.minecraftforge.items.CapabilityItemHandler;
+import net.minecraftforge.items.IItemHandler;
+import net.minecraftforge.items.ItemStackHandler;
 
 import javax.annotation.Nullable;
 import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+// TODO: 01/03/2021 Make the entity go in the burrow
 public class HopshelEntity extends AnimalEntity {
-	private static final DataParameter<Boolean> SHIELDING = EntityDataManager.createKey(HopshelEntity.class, DataSerializers.BOOLEAN);
 	private static final DataParameter<Optional<BlockPos>> BURROW_POS = EntityDataManager.createKey(HopshelEntity.class, DataSerializers.OPTIONAL_BLOCK_POS);
+	private ItemStackHandler itemHandler = createHandler();//internal
+	private LazyOptional<IItemHandler> handler = LazyOptional.of(() -> itemHandler);//external capability
 	private int remainingCooldownBeforeLocatingNewBurrow = 0;
 	private FindBurrowGoal findBurrowGoal;
+	private boolean inventoryOpen = false;
 
 	public HopshelEntity(EntityType<? extends AnimalEntity> type, World worldIn) {
 		super(type, worldIn);
@@ -53,6 +67,7 @@ public class HopshelEntity extends AnimalEntity {
 
 	@Override
 	public ILivingEntityData onInitialSpawn(IServerWorld worldIn, DifficultyInstance difficultyIn, SpawnReason reason, @Nullable ILivingEntityData spawnDataIn, @Nullable CompoundNBT dataTag) {
+		System.out.println("I'm spawning in world");
 		return super.onInitialSpawn(worldIn, difficultyIn, reason, spawnDataIn, dataTag);
 	}
 
@@ -65,15 +80,15 @@ public class HopshelEntity extends AnimalEntity {
 	@Override
 	public void writeAdditional(CompoundNBT compound) {
 		super.writeAdditional(compound);
-		compound.putBoolean("Shielding", this.isShielding());
 		compound.put("BurrowPos", NBTUtil.writeBlockPos(this.getBurrowPos()));
+		compound.put("Inventory", itemHandler.serializeNBT());
 	}
 
 	@Override
 	public void readAdditional(CompoundNBT compound) {
 		super.readAdditional(compound);
-		this.setShielding(compound.getBoolean("Shielding"));
 		this.setBurrowPos(NBTUtil.readBlockPos(compound.getCompound("BurrowPos")));
+		itemHandler.deserializeNBT(compound.getCompound("Inventory"));
 	}
 
 	@Nullable
@@ -87,52 +102,76 @@ public class HopshelEntity extends AnimalEntity {
 		super.registerGoals();
 		this.goalSelector.addGoal(1, new EnterBurrowGoal());
 		goalSelector.addGoal(1, new SwimGoal(this));
-		this.goalSelector.addGoal(5, new UpdateBurrowGoal());
+		this.goalSelector.addGoal(3, new UpdateBurrowGoal());//5
 		this.findBurrowGoal = new FindBurrowGoal();
-		goalSelector.addGoal(5, this.findBurrowGoal);
-		goalSelector.addGoal(6, new WaterAvoidingRandomWalkingGoal(this, 0.7D));
+		goalSelector.addGoal(3, this.findBurrowGoal);//5
+		goalSelector.addGoal(6, new WaterAvoidingRandomWalkingGoal(this, 0.7D) {
+			@Override
+			public boolean shouldExecute() {
+				return !HopshelEntity.this.inventoryOpen && super.shouldExecute();
+			}
+
+			@Override
+			public boolean shouldContinueExecuting() {
+				return !HopshelEntity.this.inventoryOpen && super.shouldContinueExecuting();
+			}
+		});
 		goalSelector.addGoal(7, new LookAtGoal(this, PlayerEntity.class, 6.0F));
 		goalSelector.addGoal(8, new LookRandomlyGoal(this));
 	}
 
-	public boolean isShielding() {
-		return dataManager.get(SHIELDING);
+	private ItemStackHandler createHandler() {
+		return new ItemStackHandler(8) {
+			@Override
+			protected void onContentsChanged(int slot) {
+//				markDirty();
+				// TODO: 01/03/2021 markDirty
+			}
+		};
 	}
 
-	public void setShielding(boolean value) {
-		dataManager.set(SHIELDING, value);
-	}
-
-	public void changeShielding() {
-		boolean shielding = !dataManager.get(SHIELDING);
-		dataManager.set(SHIELDING, shielding);
+	@Override
+	public <T> LazyOptional<T> getCapability(Capability<T> capability, @Nullable Direction facing) {
+		if (capability.equals(CapabilityItemHandler.ITEM_HANDLER_CAPABILITY)) {
+			return handler.cast();
+		}
+		return super.getCapability(capability, facing);
 	}
 
 	@Override
 	public ActionResultType func_230254_b_(PlayerEntity playerEntity, Hand handIn) {//onRightCLick
-		ItemStack itemStack = playerEntity.getHeldItem(handIn);
-		if (itemStack.getItem() == Items.STICK) {
-			if (!world.isRemote()) {
-				this.changeShielding();
-			}
-			return ActionResultType.SUCCESS;
+		if (!world.isRemote()) {
+			INamedContainerProvider containerProvider = new INamedContainerProvider() {
+				@Override
+				public ITextComponent getDisplayName() {
+					return new TranslationTextComponent("screen.hopshel.hopshel_inventory");
+				}
+
+				@Nullable
+				@Override
+				public Container createMenu(int id, PlayerInventory playerInventory, PlayerEntity player) {
+					return new HopshelContainer(id, world, playerInventory, player, HopshelEntity.this.getEntityId());
+				}
+			};
+			inventoryOpen = true;
+			navigator.clearPath();// TODO: 01/03/2021 stop entity moving when inventory is open
+			NetworkHooks.openGui((ServerPlayerEntity) playerEntity, containerProvider, buf -> buf.writeInt(HopshelEntity.this.getEntityId()));
 		}
 		return super.func_230254_b_(playerEntity, handIn);
 	}
 
 	@Override
-	public boolean attackEntityFrom(DamageSource source, float amount) {
-		if (!world.isRemote()) {
-			this.changeShielding();
-		}
-		return super.attackEntityFrom(source, amount);
+	protected void registerData() {
+		super.registerData();
+		dataManager.register(BURROW_POS, Optional.empty());
 	}
 
 	@Override
-	protected void registerData() {
-		super.registerData();
-		dataManager.register(SHIELDING, false);
-		dataManager.register(BURROW_POS, Optional.empty());
+	public void livingTick() {
+		if (this.remainingCooldownBeforeLocatingNewBurrow > 0) {
+			this.remainingCooldownBeforeLocatingNewBurrow--;
+		}
+		super.livingTick();
 	}
 
 	private boolean canEnterBurrow() {
@@ -154,7 +193,7 @@ public class HopshelEntity extends AnimalEntity {
 	}
 
 	private boolean isWithinDistance(BlockPos pos, int distance) {
-		return pos.withinDistance(this.getPosition(), (double) distance);
+		return pos.withinDistance(this.getPosition(), distance);
 	}
 
 	private boolean isTooFar(BlockPos pos) {
@@ -194,6 +233,10 @@ public class HopshelEntity extends AnimalEntity {
 		} else {
 			return false;
 		}
+	}
+
+	public void setInventoryClosed() {
+		this.inventoryOpen = false;
 	}
 
 	class EnterBurrowGoal extends Goal {
@@ -303,11 +346,9 @@ public class HopshelEntity extends AnimalEntity {
 
 		private void addPossibleBurrows(BlockPos pos) {
 			this.possibleBurrows.add(pos);
-
 			while (this.possibleBurrows.size() > 3) {
 				this.possibleBurrows.remove(0);
 			}
-
 		}
 
 		private void clearPossibleHives() {
@@ -318,17 +359,16 @@ public class HopshelEntity extends AnimalEntity {
 			if (HopshelEntity.this.getBurrowPos() != null) {
 				this.addPossibleBurrows(HopshelEntity.this.getBurrowPos());
 			}
-
 			this.reset();
 		}
 
 		private void reset() {
 			HopshelEntity.this.setBurrowPos(null);
-//			HopshelEntity.this.remainingCooldownBeforeLocatingNewHive = 200;
+			HopshelEntity.this.remainingCooldownBeforeLocatingNewBurrow = 200;
 		}
 
 		private boolean isCloseEnough(BlockPos pos) {
-			if (HopshelEntity.this.isWithinDistance(pos, 2)) {
+			if (HopshelEntity.this.isWithinDistance(pos, 1)) {
 				return true;
 			} else {
 				Path path = HopshelEntity.this.navigator.getPath();
@@ -370,8 +410,9 @@ public class HopshelEntity extends AnimalEntity {
 		private List<BlockPos> getNearbyFreeBurrow() {
 			BlockPos blockpos = HopshelEntity.this.getPosition();
 			PointOfInterestManager pointofinterestmanager = ((ServerWorld) HopshelEntity.this.world).getPointOfInterestManager();
-			Stream<PointOfInterest> stream = pointofinterestmanager.func_219146_b((pointOfInterest) -> pointOfInterest == PointOfInterestType.BEEHIVE
-					|| pointOfInterest == PointOfInterestType.BEE_NEST, blockpos, 20, PointOfInterestManager.Status.ANY);
+			ImmutableSet.copyOf(ModBlocks.hopshel_burrow.get().getStateContainer().getValidStates());
+			PointOfInterestType poit = new PointOfInterestType("hopshel_burrow", ImmutableSet.copyOf(ModBlocks.hopshel_burrow.get().getStateContainer().getValidStates()), 0, 1);
+			Stream<PointOfInterest> stream = pointofinterestmanager.func_219146_b((pointOfInterest) -> pointOfInterest == poit, blockpos, 20, PointOfInterestManager.Status.ANY);
 			return stream.map(PointOfInterest::getPos)
 					.filter(HopshelEntity.this::doesBurrowHaveSpace)
 					.sorted(Comparator.comparingDouble((pos) -> pos.distanceSq(blockpos)))

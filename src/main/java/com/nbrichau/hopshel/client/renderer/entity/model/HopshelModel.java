@@ -6,7 +6,6 @@ import com.nbrichau.hopshel.entity.HopshelEntity;
 import net.minecraft.client.renderer.entity.model.EntityModel;
 import net.minecraft.client.renderer.model.ModelRenderer;
 
-
 public class HopshelModel extends EntityModel<HopshelEntity> {
 
 	private final ModelRenderer body;
@@ -57,11 +56,8 @@ public class HopshelModel extends EntityModel<HopshelEntity> {
 
 	@Override
 	public void setRotationAngles(HopshelEntity entityIn, float limbSwing, float limbSwingAmount, float ageInTicks, float netHeadYaw, float headPitch) {
-		if (entityIn.isShielding()) {
-			shell_head.rotateAngleX = 0F;
-		} else {
-			shell_head.rotateAngleX = -60F * ((float) Math.PI / 180F);
-		}
+		shell_head.rotateAngleX = -60F * ((float) Math.PI / 180F);
+		// TODO: 01/03/2021 is this useful ?
 	}
 
 	private void setRotationAngle(ModelRenderer modelRenderer, float x, float y, float z) {

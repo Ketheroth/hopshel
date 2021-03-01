@@ -106,10 +106,12 @@ public class BurrowTileEntity extends TileEntity implements ITickableTileEntity 
 	public void tick() {
 		if (world != null && !world.isRemote()) {
 			Iterator<BurrowOccupant> iterator = this.burrowOccupants.iterator();
-			for (BurrowOccupant occupant = iterator.next(); iterator.hasNext(); occupant.ticksInBurrow++) {
-				if (occupant.ticksInBurrow >= BurrowOccupant.MIN_OCCUPATION_TICKS) {
-					if (this.trySpawnHopshel(occupant)) {
-						iterator.remove();
+			if (iterator.hasNext()) {
+				for (BurrowOccupant occupant = iterator.next(); iterator.hasNext(); occupant.ticksInBurrow++) {
+					if (occupant.ticksInBurrow >= BurrowOccupant.MIN_OCCUPATION_TICKS) {
+						if (this.trySpawnHopshel(occupant)) {
+							iterator.remove();
+						}
 					}
 				}
 			}
@@ -120,12 +122,8 @@ public class BurrowTileEntity extends TileEntity implements ITickableTileEntity 
 		return burrowOccupants.size() >= 2;
 	}
 
-//	public void printHopshels() {
-//		System.out.println("Il y a " + hopshels.size() + " HopshelEntity");
-//	}
-
 	static class BurrowOccupant {
-		private final static int MIN_OCCUPATION_TICKS = 100;//should be 1000
+		private final static int MIN_OCCUPATION_TICKS = 1000;
 		private final CompoundNBT entityData;
 		private int ticksInBurrow;
 

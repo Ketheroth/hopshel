@@ -1,12 +1,16 @@
 package com.nbrichau.hopshel;
 
+import com.nbrichau.hopshel.client.gui.screen.inventory.HopshelScreen;
 import com.nbrichau.hopshel.client.renderer.entity.HopshelRenderer;
 import com.nbrichau.hopshel.entity.HopshelEntity;
+import com.nbrichau.hopshel.inventory.container.HopshelContainer;
 import com.nbrichau.hopshel.world.gen.feature.HopshelBurrowFeature;
 import net.minecraft.block.Block;
+import net.minecraft.client.gui.ScreenManager;
 import net.minecraft.entity.EntityClassification;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.ai.attributes.GlobalEntityTypeAttributes;
+import net.minecraft.inventory.container.ContainerType;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemGroup;
 import net.minecraft.item.ItemStack;
@@ -21,6 +25,7 @@ import net.minecraft.world.gen.feature.*;
 import net.minecraft.world.gen.placement.NoiseDependant;
 import net.minecraft.world.gen.placement.Placement;
 import net.minecraftforge.common.MinecraftForge;
+import net.minecraftforge.common.extensions.IForgeContainerType;
 import net.minecraftforge.event.RegistryEvent;
 import net.minecraftforge.event.world.BiomeLoadingEvent;
 import net.minecraftforge.eventbus.api.IEventBus;
@@ -45,13 +50,19 @@ public class HopshelMod {
 	public static final DeferredRegister<Item> ITEMS = DeferredRegister.create(ForgeRegistries.ITEMS, MODID);
 	public static final DeferredRegister<EntityType<?>> ENTITY_TYPES = DeferredRegister.create(ForgeRegistries.ENTITIES, MODID);
 	public static final DeferredRegister<TileEntityType<?>> TILES = DeferredRegister.create(ForgeRegistries.TILE_ENTITIES, MODID);
+	public static final DeferredRegister<ContainerType<?>> CONTAINERS = DeferredRegister.create(ForgeRegistries.CONTAINERS, MODID);
 
 	public static final RegistryObject<EntityType<HopshelEntity>> HOPSHEL_ENTITY = ENTITY_TYPES
 			.register("hopshel", () -> EntityType.Builder.create(HopshelEntity::new, EntityClassification.CREATURE)
 					.size(0.5F, 0.5F)
 					.build(new ResourceLocation(MODID, "hopshel").toString()));
 
+	public static final RegistryObject<ContainerType<HopshelContainer>> HOPSHEL_CONTAINER = CONTAINERS.register("hopshel_container", () -> IForgeContainerType.create((windowId, inv, data) -> {
+		return new HopshelContainer(windowId, inv.player.getEntityWorld(), inv, inv.player, data.readInt());
+	}));
+
 	public static final ConfiguredFeature<?, ?> hopshel_burrow_configured = new HopshelBurrowFeature(NoFeatureConfig.field_236558_a_).withConfiguration(IFeatureConfig.NO_FEATURE_CONFIG).withPlacement(Features.Placements.HEIGHTMAP_PLACEMENT).withPlacement(Placement.COUNT_NOISE.configure(new NoiseDependant(-0.8, 1, 0)));
+
 
 	public HopshelMod() {
 		final IEventBus modEventBus = FMLJavaModLoadingContext.get().getModEventBus();
@@ -63,6 +74,7 @@ public class HopshelMod {
 		BLOCKS.register(modEventBus);
 		ITEMS.register(modEventBus);
 		TILES.register(modEventBus);
+		CONTAINERS.register(modEventBus);
 
 
 		MinecraftForge.EVENT_BUS.register(this);
@@ -74,6 +86,7 @@ public class HopshelMod {
 
 	private void clientSetup(final FMLClientSetupEvent event) {
 		RenderingRegistry.registerEntityRenderingHandler(HOPSHEL_ENTITY.get(), HopshelRenderer::new);
+		ScreenManager.registerFactory(HOPSHEL_CONTAINER.get(), HopshelScreen::new);
 	}
 
 	@SubscribeEvent
