@@ -4,17 +4,20 @@ import com.google.common.collect.ImmutableSet;
 import com.nbrichau.hopshel.block.ModBlocks;
 import com.nbrichau.hopshel.inventory.container.HopshelContainer;
 import com.nbrichau.hopshel.tileentity.BurrowTileEntity;
+import net.minecraft.enchantment.EnchantmentHelper;
 import net.minecraft.entity.*;
 import net.minecraft.entity.ai.RandomPositionGenerator;
 import net.minecraft.entity.ai.attributes.AttributeModifierMap;
 import net.minecraft.entity.ai.attributes.Attributes;
 import net.minecraft.entity.ai.goal.*;
+import net.minecraft.entity.item.ItemEntity;
 import net.minecraft.entity.passive.AnimalEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.player.PlayerInventory;
 import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraft.inventory.container.Container;
 import net.minecraft.inventory.container.INamedContainerProvider;
+import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.nbt.NBTUtil;
 import net.minecraft.network.datasync.DataParameter;
@@ -24,6 +27,7 @@ import net.minecraft.pathfinding.Path;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.ActionResultType;
 import net.minecraft.util.Direction;
+import net.minecraft.util.EntityPredicates;
 import net.minecraft.util.Hand;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.vector.Vector3d;
@@ -51,14 +55,16 @@ import java.util.stream.Stream;
 // TODO: 01/03/2021 Make the entity go in the burrow
 public class HopshelEntity extends AnimalEntity {
 	private static final DataParameter<Optional<BlockPos>> BURROW_POS = EntityDataManager.createKey(HopshelEntity.class, DataSerializers.OPTIONAL_BLOCK_POS);
-	private ItemStackHandler itemHandler = createHandler();//internal
+	private ItemStackHandler itemHandler = this.createHandler();//internal
 	private LazyOptional<IItemHandler> handler = LazyOptional.of(() -> itemHandler);//external capability
 	private int remainingCooldownBeforeLocatingNewBurrow = 0;
 	private FindBurrowGoal findBurrowGoal;
 	private boolean inventoryOpen = false;
+	private int transferCooldown = 0;
 
 	public HopshelEntity(EntityType<? extends AnimalEntity> type, World worldIn) {
 		super(type, worldIn);
+		this.setCanPickUpLoot(true);
 	}
 
 	public static AttributeModifierMap.MutableAttribute registerAttributes() {
@@ -100,11 +106,12 @@ public class HopshelEntity extends AnimalEntity {
 	@Override
 	protected void registerGoals() {
 		super.registerGoals();
-		this.goalSelector.addGoal(1, new EnterBurrowGoal());
+		goalSelector.addGoal(1, new EnterBurrowGoal());
 		goalSelector.addGoal(1, new SwimGoal(this));
-		this.goalSelector.addGoal(3, new UpdateBurrowGoal());//5
-		this.findBurrowGoal = new FindBurrowGoal();
-		goalSelector.addGoal(3, this.findBurrowGoal);//5
+		goalSelector.addGoal(2, new SuckUpItemGoal());
+		goalSelector.addGoal(5, new UpdateBurrowGoal());
+		findBurrowGoal = new FindBurrowGoal();
+		goalSelector.addGoal(5, this.findBurrowGoal);
 		goalSelector.addGoal(6, new WaterAvoidingRandomWalkingGoal(this, 0.7D) {
 			@Override
 			public boolean shouldExecute() {
@@ -171,7 +178,21 @@ public class HopshelEntity extends AnimalEntity {
 		if (this.remainingCooldownBeforeLocatingNewBurrow > 0) {
 			this.remainingCooldownBeforeLocatingNewBurrow--;
 		}
+		transferCooldown--;
 		super.livingTick();
+	}
+
+	@Override
+	protected void dropInventory() {
+		super.dropInventory();
+		if (itemHandler != null) {
+			for (int i = 0; i < itemHandler.getSlots(); i++) {
+				ItemStack itemstack = itemHandler.getStackInSlot(i);
+				if (!itemstack.isEmpty() && !EnchantmentHelper.hasVanishingCurse(itemstack)) {
+					this.entityDropItem(itemstack);
+				}
+			}
+		}
 	}
 
 	private boolean canEnterBurrow() {
@@ -237,6 +258,24 @@ public class HopshelEntity extends AnimalEntity {
 
 	public void setInventoryClosed() {
 		this.inventoryOpen = false;
+	}
+
+	private boolean canTakeItem(ItemStack itemStack) {
+		for (int i = 0; i < itemHandler.getSlots(); i++) {
+			ItemStack stackInSlot = itemHandler.getStackInSlot(i);
+			if (stackInSlot.isEmpty() || (stackInSlot.isItemEqual(itemStack) && stackInSlot.getCount() < stackInSlot.getMaxStackSize())) {
+				return true;
+			}
+		}
+		return false;
+	}
+
+	private boolean isOnTransferCooldown() {
+		return this.transferCooldown > 0;
+	}
+
+	public void setTransferCooldown(int ticks) {
+		this.transferCooldown = ticks;
 	}
 
 	class EnterBurrowGoal extends Goal {
@@ -420,4 +459,50 @@ public class HopshelEntity extends AnimalEntity {
 		}
 	}
 
+	class SuckUpItemGoal extends Goal {
+		@Override
+		public boolean shouldExecute() {
+			List<ItemEntity> list = world.getEntitiesWithinAABB(ItemEntity.class, HopshelEntity.this.getBoundingBox().grow(2.5D, 2.5D, 2.5D), EntityPredicates.IS_ALIVE);
+			return !list.isEmpty() && list.stream().anyMatch(itemEntity -> HopshelEntity.this.canTakeItem(itemEntity.getItem()));
+		}
+
+		@Override
+		public boolean shouldContinueExecuting() {
+			return false;
+		}
+
+		@Override
+		public void startExecuting() {
+			if (world != null && !world.isRemote) {
+				if (HopshelEntity.this.isOnTransferCooldown()) {
+					return;
+				}
+				//get all items entity can pickUp
+				List<ItemEntity> list = world.getEntitiesWithinAABB(ItemEntity.class, HopshelEntity.this.getBoundingBox().grow(2.5D, 2.5D, 2.5D), EntityPredicates.IS_ALIVE);
+				for (ItemEntity itemEntity : list) {
+					///create a simulated stack of what to insert
+					ItemStack pickupStack = itemEntity.getItem().copy().split(1);
+					for (int i = 0; i < itemHandler.getSlots(); i++) {
+						//is the item accepted into the slot ?
+						if (itemHandler.isItemValid(i, pickupStack) && itemHandler.insertItem(i, pickupStack, true).getCount() != pickupStack.getCount()) {
+							//actually split the picked up stack
+							ItemStack actualPickupStack = itemEntity.getItem().split(1);
+							//insert the stack
+							ItemStack remaining = itemHandler.insertItem(i, actualPickupStack, false);
+							//if leftover, spawn them in the world
+							if (!remaining.isEmpty()) {
+								ItemEntity item = new ItemEntity(EntityType.ITEM, world);
+								item.setItem(remaining);
+								item.setPosition(HopshelEntity.this.getPosX() + 0.5f, HopshelEntity.this.getPosY() + 0.5f, HopshelEntity.this.getPosZ() + 0.5f);
+								item.lifespan = remaining.getEntityLifespan(world);
+								world.addEntity(item);
+							}
+							HopshelEntity.this.setTransferCooldown(8);
+							return;
+						}
+					}
+				}
+			}
+		}
+	}
 }
