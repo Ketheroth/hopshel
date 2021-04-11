@@ -25,8 +25,8 @@ public class BurrowTileEntity extends TileEntity implements ITickableTileEntity 
 	}
 
 	@Override
-	public void read(BlockState state, CompoundNBT nbt) {
-		super.read(state, nbt);
+	public void load(BlockState state, CompoundNBT nbt) {
+		super.load(state, nbt);
 		this.burrowOccupants.clear();
 		ListNBT listnbt = nbt.getList("burrowOccupants", 10);
 		for (int i = 0; i < listnbt.size(); ++i) {
@@ -37,9 +37,9 @@ public class BurrowTileEntity extends TileEntity implements ITickableTileEntity 
 	}
 
 	@Override
-	public CompoundNBT write(CompoundNBT compound) {
+	public CompoundNBT save(CompoundNBT compound) {
 		compound.put("burrowOccupants", this.getBurrowOccupants());
-		return super.write(compound);
+		return super.save(compound);
 	}
 
 	private ListNBT getBurrowOccupants() {
@@ -57,35 +57,35 @@ public class BurrowTileEntity extends TileEntity implements ITickableTileEntity 
 	public void tryEnterBurrow(Entity entity, int initialTicksInBurrow) {
 		if (burrowOccupants.size() < 2) {
 			entity.stopRiding();
-			entity.removePassengers();
+			entity.ejectPassengers();
 			CompoundNBT compoundnbt = new CompoundNBT();
 			//save if custom name ?
-			entity.writeUnlessPassenger(compoundnbt);
+			entity.save(compoundnbt);
 			burrowOccupants.add(new BurrowOccupant(compoundnbt, initialTicksInBurrow));
-			if (world != null) {
-				BlockPos blockpos = this.getPos();
-				world.playSound(null, blockpos.getX(), blockpos.getY(), blockpos.getZ(), SoundEvents.BLOCK_BEEHIVE_ENTER, SoundCategory.BLOCKS, 1.0F, 1.0F);
+			if (level != null) {
+				BlockPos blockpos = this.getBlockPos();
+				level.playSound(null, blockpos.getX(), blockpos.getY(), blockpos.getZ(), SoundEvents.BEEHIVE_ENTER, SoundCategory.BLOCKS, 1.0F, 1.0F);
 			}
 			entity.remove(true);
 		}
 	}
 
 	private boolean trySpawnHopshel(BurrowOccupant occupant) {
-		BlockPos blockpos = this.getPos();
+		BlockPos blockpos = this.getBlockPos();
 		CompoundNBT compoundnbt = occupant.entityData;
 //		compoundnbt.remove("Passengers");
 //		compoundnbt.remove("Leash");
 //		compoundnbt.remove("UUID");
-		if (!world.getBlockState(blockpos.up()).getCollisionShape(world, blockpos.up()).isEmpty()) {
+		if (!level.getBlockState(blockpos.above()).getBlockSupportShape(level, blockpos.above()).isEmpty()) {
 			return false;
 		} else {
-			Entity entity = EntityType.loadEntityAndExecute(compoundnbt, world, (entity1) -> entity1);
+			Entity entity = EntityType.loadEntityRecursive(compoundnbt, level, (entity1) -> entity1);
 			if (entity != null) {
 				if (entity instanceof HopshelEntity) {
-					entity.setLocationAndAngles(blockpos.getX(), blockpos.up().getY() + 1.0F, blockpos.getZ(), entity.rotationYaw, entity.rotationPitch);
+					entity.moveTo(blockpos.getX(), blockpos.above().getY() + 1.0F, blockpos.getZ(), entity.yRot, entity.xRot);
 				}
-				world.playSound(null, blockpos, SoundEvents.BLOCK_BEEHIVE_EXIT, SoundCategory.BLOCKS, 1.0F, 1.0F);
-				return world.addEntity(entity);
+				level.playSound(null, blockpos, SoundEvents.BEEHIVE_EXIT, SoundCategory.BLOCKS, 1.0F, 1.0F);
+				return level.addFreshEntity(entity);
 			} else {
 				return false;
 			}
@@ -99,12 +99,12 @@ public class BurrowTileEntity extends TileEntity implements ITickableTileEntity 
 //		} else if (i > 0) {
 //			hopshelEntity.setGrowingAge(Math.max(0, i - tickInBurrow));
 //		}
-//		hopshelEntity.setInLove(Math.max(0, hopshelEntity.func_234178_eO_() - tickInBurrow));
+//		hopshelEntity.setInLove(Math.max(0, hopshelEntity.getInLoveTime() - tickInBurrow));
 //	}
 
 	@Override
 	public void tick() {
-		if (world != null && !world.isRemote()) {
+		if (level != null && !level.isClientSide()) {
 			Iterator<BurrowOccupant> iterator = this.burrowOccupants.iterator();
 			if (iterator.hasNext()) {
 				for (BurrowOccupant occupant = iterator.next(); iterator.hasNext(); occupant.ticksInBurrow++) {

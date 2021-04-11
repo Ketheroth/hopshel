@@ -12,6 +12,8 @@ import net.minecraft.util.math.BlockRayTraceResult;
 import net.minecraft.world.IBlockReader;
 import net.minecraft.world.World;
 
+import net.minecraft.block.AbstractBlock.Properties;
+
 public class HopshelBurrow extends Block {
 	public HopshelBurrow(Properties properties) {
 		super(properties);
@@ -28,11 +30,11 @@ public class HopshelBurrow extends Block {
 	}
 
 	@Override
-	public ActionResultType onBlockActivated(BlockState state, World worldIn, BlockPos pos, PlayerEntity player, Hand handIn, BlockRayTraceResult hit) {
-		if (worldIn.isRemote()) {
+	public ActionResultType use(BlockState state, World worldIn, BlockPos pos, PlayerEntity player, Hand handIn, BlockRayTraceResult hit) {
+		if (worldIn.isClientSide()) {
 			return ActionResultType.SUCCESS;
 		}
-		if (!(worldIn.getTileEntity(pos) instanceof BurrowTileEntity)) {
+		if (!(worldIn.getBlockEntity(pos) instanceof BurrowTileEntity)) {
 			return ActionResultType.FAIL;
 		}
 		return ActionResultType.SUCCESS;

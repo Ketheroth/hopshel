@@ -16,10 +16,10 @@ import static com.nbrichau.hopshel.HopshelMod.*;
 
 @Mod.EventBusSubscriber(modid = HopshelMod.MODID, bus = Mod.EventBusSubscriber.Bus.MOD)
 public class ModBlocks {
-	public static final RegistryObject<GravelBlock> endstone_gravel = BLOCKS.register("endstone_gravel", () -> new GravelBlock(AbstractBlock.Properties.from(Blocks.GRAVEL)));
-	private static final RegistryObject<Item> endstone_gravel_item = ITEMS.register("endstone_gravel", () -> new BlockItem(endstone_gravel.get(), new Item.Properties().group(HopshelMod.HopshelGroup.instance)));
+	public static final RegistryObject<GravelBlock> endstone_gravel = BLOCKS.register("endstone_gravel", () -> new GravelBlock(AbstractBlock.Properties.copy(Blocks.GRAVEL)));
+	private static final RegistryObject<Item> endstone_gravel_item = ITEMS.register("endstone_gravel", () -> new BlockItem(endstone_gravel.get(), new Item.Properties().tab(HopshelMod.HopshelGroup.instance)));
 
-	public static final RegistryObject<Block> hopshel_burrow = BLOCKS.register("hopshel_burrow", () -> new HopshelBurrow(AbstractBlock.Properties.from(Blocks.STONE)));
-	private static final RegistryObject<Item> hopshel_burrow_item = ITEMS.register("hopshel_burrow", () -> new BlockItem(hopshel_burrow.get(), new Item.Properties().group(HopshelMod.HopshelGroup.instance)));
-	public static final RegistryObject<TileEntityType<?>> hopshel_burrow_tile = TILES.register("hopshel_burrow", () -> TileEntityType.Builder.create(BurrowTileEntity::new, hopshel_burrow.get()).build(null));
+	public static final RegistryObject<Block> hopshel_burrow = BLOCKS.register("hopshel_burrow", () -> new HopshelBurrow(AbstractBlock.Properties.copy(Blocks.STONE)));
+	private static final RegistryObject<Item> hopshel_burrow_item = ITEMS.register("hopshel_burrow", () -> new BlockItem(hopshel_burrow.get(), new Item.Properties().tab(HopshelMod.HopshelGroup.instance)));
+	public static final RegistryObject<TileEntityType<?>> hopshel_burrow_tile = TILES.register("hopshel_burrow", () -> TileEntityType.Builder.of(BurrowTileEntity::new, hopshel_burrow.get()).build(null));
 }

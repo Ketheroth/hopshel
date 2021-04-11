@@ -54,7 +54,7 @@ import java.util.stream.Stream;
 
 // TODO: 01/03/2021 Make the entity go in the burrow
 public class HopshelEntity extends AnimalEntity {
-	private static final DataParameter<Optional<BlockPos>> BURROW_POS = EntityDataManager.createKey(HopshelEntity.class, DataSerializers.OPTIONAL_BLOCK_POS);
+	private static final DataParameter<Optional<BlockPos>> BURROW_POS = EntityDataManager.defineId(HopshelEntity.class, DataSerializers.OPTIONAL_BLOCK_POS);
 	private ItemStackHandler itemHandler = this.createHandler();//internal
 	private LazyOptional<IItemHandler> handler = LazyOptional.of(() -> itemHandler);//external capability
 	private int remainingCooldownBeforeLocatingNewBurrow = 0;
@@ -68,13 +68,13 @@ public class HopshelEntity extends AnimalEntity {
 	}
 
 	public static AttributeModifierMap.MutableAttribute registerAttributes() {
-		return MobEntity.func_233666_p_().createMutableAttribute(Attributes.MAX_HEALTH, 24.0D).createMutableAttribute(Attributes.MOVEMENT_SPEED, 0.3F);
+		return MobEntity.createMobAttributes().add(Attributes.MAX_HEALTH, 24.0D).add(Attributes.MOVEMENT_SPEED, 0.3F);
 	}
 
 	@Override
-	public ILivingEntityData onInitialSpawn(IServerWorld worldIn, DifficultyInstance difficultyIn, SpawnReason reason, @Nullable ILivingEntityData spawnDataIn, @Nullable CompoundNBT dataTag) {
+	public ILivingEntityData finalizeSpawn(IServerWorld worldIn, DifficultyInstance difficultyIn, SpawnReason reason, @Nullable ILivingEntityData spawnDataIn, @Nullable CompoundNBT dataTag) {
 		System.out.println("I'm spawning in world");
-		return super.onInitialSpawn(worldIn, difficultyIn, reason, spawnDataIn, dataTag);
+		return super.finalizeSpawn(worldIn, difficultyIn, reason, spawnDataIn, dataTag);
 	}
 
 	@Override
@@ -84,22 +84,22 @@ public class HopshelEntity extends AnimalEntity {
 	}
 
 	@Override
-	public void writeAdditional(CompoundNBT compound) {
-		super.writeAdditional(compound);
+	public void addAdditionalSaveData(CompoundNBT compound) {
+		super.addAdditionalSaveData(compound);
 		compound.put("BurrowPos", NBTUtil.writeBlockPos(this.getBurrowPos()));
 		compound.put("Inventory", itemHandler.serializeNBT());
 	}
 
 	@Override
-	public void readAdditional(CompoundNBT compound) {
-		super.readAdditional(compound);
+	public void readAdditionalSaveData(CompoundNBT compound) {
+		super.readAdditionalSaveData(compound);
 		this.setBurrowPos(NBTUtil.readBlockPos(compound.getCompound("BurrowPos")));
 		itemHandler.deserializeNBT(compound.getCompound("Inventory"));
 	}
 
 	@Nullable
 	@Override
-	public AgeableEntity func_241840_a(ServerWorld p_241840_1_, AgeableEntity p_241840_2_) {
+	public AgeableEntity getBreedOffspring(ServerWorld p_241840_1_, AgeableEntity p_241840_2_) {
 		return null;
 	}
 
@@ -114,13 +114,13 @@ public class HopshelEntity extends AnimalEntity {
 		goalSelector.addGoal(5, this.findBurrowGoal);
 		goalSelector.addGoal(6, new WaterAvoidingRandomWalkingGoal(this, 0.7D) {
 			@Override
-			public boolean shouldExecute() {
-				return !HopshelEntity.this.inventoryOpen && super.shouldExecute();
+			public boolean canUse() {
+				return !HopshelEntity.this.inventoryOpen && super.canUse();
 			}
 
 			@Override
-			public boolean shouldContinueExecuting() {
-				return !HopshelEntity.this.inventoryOpen && super.shouldContinueExecuting();
+			public boolean canContinueToUse() {
+				return !HopshelEntity.this.inventoryOpen && super.canContinueToUse();
 			}
 		});
 		goalSelector.addGoal(7, new LookAtGoal(this, PlayerEntity.class, 6.0F));
@@ -146,8 +146,8 @@ public class HopshelEntity extends AnimalEntity {
 	}
 
 	@Override
-	public ActionResultType func_230254_b_(PlayerEntity playerEntity, Hand handIn) {//onRightCLick
-		if (!world.isRemote()) {
+	public ActionResultType mobInteract(PlayerEntity playerEntity, Hand handIn) {//onRightCLick
+		if (!level.isClientSide()) {
 			INamedContainerProvider containerProvider = new INamedContainerProvider() {
 				@Override
 				public ITextComponent getDisplayName() {
@@ -157,39 +157,39 @@ public class HopshelEntity extends AnimalEntity {
 				@Nullable
 				@Override
 				public Container createMenu(int id, PlayerInventory playerInventory, PlayerEntity player) {
-					return new HopshelContainer(id, world, playerInventory, player, HopshelEntity.this.getEntityId());
+					return new HopshelContainer(id, level, playerInventory, player, HopshelEntity.this.getId());
 				}
 			};
 			inventoryOpen = true;
-			navigator.clearPath();// TODO: 01/03/2021 stop entity moving when inventory is open
-			NetworkHooks.openGui((ServerPlayerEntity) playerEntity, containerProvider, buf -> buf.writeInt(HopshelEntity.this.getEntityId()));
+			navigation.stop();// TODO: 01/03/2021 stop entity moving when inventory is open
+			NetworkHooks.openGui((ServerPlayerEntity) playerEntity, containerProvider, buf -> buf.writeInt(HopshelEntity.this.getId()));
 		}
-		return super.func_230254_b_(playerEntity, handIn);
+		return super.mobInteract(playerEntity, handIn);
 	}
 
 	@Override
-	protected void registerData() {
-		super.registerData();
-		dataManager.register(BURROW_POS, Optional.empty());
+	protected void defineSynchedData() {
+		super.defineSynchedData();
+		entityData.define(BURROW_POS, Optional.empty());
 	}
 
 	@Override
-	public void livingTick() {
+	public void aiStep() {
 		if (this.remainingCooldownBeforeLocatingNewBurrow > 0) {
 			this.remainingCooldownBeforeLocatingNewBurrow--;
 		}
 		transferCooldown--;
-		super.livingTick();
+		super.aiStep();
 	}
 
 	@Override
-	protected void dropInventory() {
-		super.dropInventory();
+	protected void dropEquipment() {
+		super.dropEquipment();
 		if (itemHandler != null) {
 			for (int i = 0; i < itemHandler.getSlots(); i++) {
 				ItemStack itemstack = itemHandler.getStackInSlot(i);
 				if (!itemstack.isEmpty() && !EnchantmentHelper.hasVanishingCurse(itemstack)) {
-					this.entityDropItem(itemstack);
+					this.spawnAtLocation(itemstack);
 				}
 			}
 		}
@@ -202,19 +202,19 @@ public class HopshelEntity extends AnimalEntity {
 
 	@Nullable
 	private BlockPos getBurrowPos() {
-		return this.getDataManager().get(BURROW_POS).orElse(null);
+		return this.getEntityData().get(BURROW_POS).orElse(null);
 	}
 
 	public void setBurrowPos(@Nullable BlockPos pos) {
-		this.dataManager.set(BURROW_POS, Optional.ofNullable(pos));
+		this.entityData.set(BURROW_POS, Optional.ofNullable(pos));
 	}
 
 	private boolean hasBurrow() {
-		return this.dataManager.get(BURROW_POS).isPresent();
+		return this.entityData.get(BURROW_POS).isPresent();
 	}
 
 	private boolean isWithinDistance(BlockPos pos, int distance) {
-		return pos.withinDistance(this.getPosition(), distance);
+		return pos.closerThan(this.blockPosition(), distance);
 	}
 
 	private boolean isTooFar(BlockPos pos) {
@@ -222,9 +222,9 @@ public class HopshelEntity extends AnimalEntity {
 	}
 
 	private void startMovingTo(BlockPos pos) {
-		Vector3d vector3d = Vector3d.copyCenteredHorizontally(pos);
+		Vector3d vector3d = Vector3d.atBottomCenterOf(pos);
 		int i = 0;
-		BlockPos blockpos = this.getPosition();
+		BlockPos blockpos = this.blockPosition();
 		int j = (int) vector3d.y - blockpos.getY();
 		if (j > 2) {
 			i = 4;
@@ -234,21 +234,21 @@ public class HopshelEntity extends AnimalEntity {
 
 		int k = 6;
 		int l = 8;
-		int i1 = blockpos.manhattanDistance(pos);
+		int i1 = blockpos.distManhattan(pos);
 		if (i1 < 15) {
 			k = i1 / 2;
 			l = i1 / 2;
 		}
 
-		Vector3d vector3d1 = RandomPositionGenerator.func_226344_b_(this, k, l, i, vector3d, (double) ((float) Math.PI / 10F));
+		Vector3d vector3d1 = RandomPositionGenerator.getAirPosTowards(this, k, l, i, vector3d, (double) ((float) Math.PI / 10F));
 		if (vector3d1 != null) {
-			this.navigator.setRangeMultiplier(0.5F);
-			this.navigator.tryMoveToXYZ(vector3d1.x, vector3d1.y, vector3d1.z, 1.0D);
+			this.navigation.setMaxVisitedNodesMultiplier(0.5F);
+			this.navigation.moveTo(vector3d1.x, vector3d1.y, vector3d1.z, 1.0D);
 		}
 	}
 
 	private boolean doesBurrowHaveSpace(BlockPos pos) {
-		TileEntity tileentity = this.world.getTileEntity(pos);
+		TileEntity tileentity = this.level.getBlockEntity(pos);
 		if (tileentity instanceof BurrowTileEntity) {
 			return !((BurrowTileEntity) tileentity).isFull();
 		} else {
@@ -260,10 +260,10 @@ public class HopshelEntity extends AnimalEntity {
 		this.inventoryOpen = false;
 	}
 
-	private boolean canTakeItem(ItemStack itemStack) {
+	public boolean canTakeItem(ItemStack itemStack) {
 		for (int i = 0; i < itemHandler.getSlots(); i++) {
 			ItemStack stackInSlot = itemHandler.getStackInSlot(i);
-			if (stackInSlot.isEmpty() || (stackInSlot.isItemEqual(itemStack) && stackInSlot.getCount() < stackInSlot.getMaxStackSize())) {
+			if (stackInSlot.isEmpty() || (stackInSlot.sameItem(itemStack) && stackInSlot.getCount() < stackInSlot.getMaxStackSize())) {
 				return true;
 			}
 		}
@@ -280,9 +280,9 @@ public class HopshelEntity extends AnimalEntity {
 
 	class EnterBurrowGoal extends Goal {
 		@Override
-		public boolean shouldExecute() {
-			if (HopshelEntity.this.hasBurrow() && HopshelEntity.this.canEnterBurrow() && HopshelEntity.this.getBurrowPos().withinDistance(HopshelEntity.this.getPositionVec(), 2.0D)) {
-				TileEntity tileentity = HopshelEntity.this.world.getTileEntity(HopshelEntity.this.getBurrowPos());
+		public boolean canUse() {
+			if (HopshelEntity.this.hasBurrow() && HopshelEntity.this.canEnterBurrow() && HopshelEntity.this.getBurrowPos().closerThan(HopshelEntity.this.position(), 2.0D)) {
+				TileEntity tileentity = HopshelEntity.this.level.getBlockEntity(HopshelEntity.this.getBurrowPos());
 				if (tileentity instanceof BurrowTileEntity) {
 					BurrowTileEntity burrowTileEntity = (BurrowTileEntity) tileentity;
 					if (!burrowTileEntity.isFull()) {
@@ -295,13 +295,13 @@ public class HopshelEntity extends AnimalEntity {
 		}
 
 		@Override
-		public boolean shouldContinueExecuting() {
+		public boolean canContinueToUse() {
 			return false;
 		}
 
 		@Override
-		public void startExecuting() {
-			TileEntity tileentity = HopshelEntity.this.world.getTileEntity(HopshelEntity.this.getBurrowPos());
+		public void start() {
+			TileEntity tileentity = HopshelEntity.this.level.getBlockEntity(HopshelEntity.this.getBurrowPos());
 			if (tileentity instanceof BurrowTileEntity) {
 				BurrowTileEntity burrowTileEntity = (BurrowTileEntity) tileentity;
 				burrowTileEntity.tryEnterBurrow(HopshelEntity.this, 50);//with random ?
@@ -310,38 +310,38 @@ public class HopshelEntity extends AnimalEntity {
 	}
 
 	class FindBurrowGoal extends Goal {
-		private int ticks = HopshelEntity.this.world.rand.nextInt(10);
+		private int ticks = HopshelEntity.this.level.random.nextInt(10);
 		private List<BlockPos> possibleBurrows = new ArrayList<>();
 		@Nullable
 		private Path path = null;
 		private int counter;
 
 		FindBurrowGoal() {
-			this.setMutexFlags(EnumSet.of(Goal.Flag.MOVE));
+			this.setFlags(EnumSet.of(Goal.Flag.MOVE));
 		}
 
 		@Override
-		public boolean shouldExecute() {
-			return HopshelEntity.this.hasBurrow() && !HopshelEntity.this.detachHome() && HopshelEntity.this.canEnterBurrow() && !this.isCloseEnough(HopshelEntity.this.getBurrowPos()) && HopshelEntity.this.world.getBlockState(HopshelEntity.this.getBurrowPos()).isIn(ModBlocks.hopshel_burrow.get());
+		public boolean canUse() {
+			return HopshelEntity.this.hasBurrow() && !HopshelEntity.this.hasRestriction() && HopshelEntity.this.canEnterBurrow() && !this.isCloseEnough(HopshelEntity.this.getBurrowPos()) && HopshelEntity.this.level.getBlockState(HopshelEntity.this.getBurrowPos()).is(ModBlocks.hopshel_burrow.get());
 		}
 
 		@Override
-		public boolean shouldContinueExecuting() {
-			return this.shouldExecute();
+		public boolean canContinueToUse() {
+			return this.canUse();
 		}
 
 		@Override
-		public void startExecuting() {
+		public void start() {
 			this.ticks = 0;
 			this.counter = 0;
-			super.startExecuting();
+			super.start();
 		}
 
-		public void resetTask() {
+		public void stop() {
 			this.ticks = 0;
 			this.counter = 0;
-			HopshelEntity.this.navigator.clearPath();
-			HopshelEntity.this.navigator.resetRangeMultiplier();
+			HopshelEntity.this.navigation.stop();
+			HopshelEntity.this.navigation.resetMaxVisitedNodesMultiplier();
 		}
 
 		public void tick() {
@@ -349,7 +349,7 @@ public class HopshelEntity extends AnimalEntity {
 				++this.ticks;
 				if (this.ticks > 600) {
 					this.makeChosenBurrowPossibleBurrow();
-				} else if (!HopshelEntity.this.navigator.hasPath()) {
+				} else if (!HopshelEntity.this.navigation.isInProgress()) {
 					if (!HopshelEntity.this.isWithinDistance(HopshelEntity.this.getBurrowPos(), 16)) {
 						if (HopshelEntity.this.isTooFar(HopshelEntity.this.getBurrowPos())) {
 							this.reset();
@@ -359,14 +359,14 @@ public class HopshelEntity extends AnimalEntity {
 					} else {
 						if (!this.startMovingToFar(HopshelEntity.this.getBurrowPos())) {
 							this.makeChosenBurrowPossibleBurrow();
-						} else if (this.path != null && HopshelEntity.this.navigator.getPath().isSamePath(this.path)) {
+						} else if (this.path != null && HopshelEntity.this.navigation.getPath().sameAs(this.path)) {
 							++this.counter;
 							if (this.counter > 60) {
 								this.reset();
 								this.counter = 0;
 							}
 						} else {
-							this.path = HopshelEntity.this.navigator.getPath();
+							this.path = HopshelEntity.this.navigation.getPath();
 						}
 					}
 				}
@@ -374,9 +374,9 @@ public class HopshelEntity extends AnimalEntity {
 		}
 
 		private boolean startMovingToFar(BlockPos pos) {
-			HopshelEntity.this.navigator.setRangeMultiplier(10.0F);
-			HopshelEntity.this.navigator.tryMoveToXYZ(pos.getX(), pos.getY(), pos.getZ(), 1.0D);
-			return HopshelEntity.this.navigator.getPath() != null && HopshelEntity.this.navigator.getPath().reachesTarget();
+			HopshelEntity.this.navigation.setMaxVisitedNodesMultiplier(10.0F);
+			HopshelEntity.this.navigation.moveTo(pos.getX(), pos.getY(), pos.getZ(), 1.0D);
+			return HopshelEntity.this.navigation.getPath() != null && HopshelEntity.this.navigation.getPath().canReach();
 		}
 
 		private boolean isPossibleBurrow(BlockPos pos) {
@@ -410,8 +410,8 @@ public class HopshelEntity extends AnimalEntity {
 			if (HopshelEntity.this.isWithinDistance(pos, 1)) {
 				return true;
 			} else {
-				Path path = HopshelEntity.this.navigator.getPath();
-				return path != null && path.getTarget().equals(pos) && path.reachesTarget() && path.isFinished();
+				Path path = HopshelEntity.this.navigation.getPath();
+				return path != null && path.getTarget().equals(pos) && path.canReach() && path.isDone();
 			}
 		}
 	}
@@ -421,17 +421,17 @@ public class HopshelEntity extends AnimalEntity {
 		}
 
 		@Override
-		public boolean shouldExecute() {
+		public boolean canUse() {
 			return HopshelEntity.this.remainingCooldownBeforeLocatingNewBurrow == 0 && !HopshelEntity.this.hasBurrow() && HopshelEntity.this.canEnterBurrow();
 		}
 
 		@Override
-		public boolean shouldContinueExecuting() {
+		public boolean canContinueToUse() {
 			return false;
 		}
 
 		@Override
-		public void startExecuting() {
+		public void start() {
 			HopshelEntity.this.remainingCooldownBeforeLocatingNewBurrow = 200;
 			List<BlockPos> list = this.getNearbyFreeBurrow();
 			if (!list.isEmpty()) {
@@ -447,38 +447,38 @@ public class HopshelEntity extends AnimalEntity {
 		}
 
 		private List<BlockPos> getNearbyFreeBurrow() {
-			BlockPos blockpos = HopshelEntity.this.getPosition();
-			PointOfInterestManager pointofinterestmanager = ((ServerWorld) HopshelEntity.this.world).getPointOfInterestManager();
-			ImmutableSet.copyOf(ModBlocks.hopshel_burrow.get().getStateContainer().getValidStates());
-			PointOfInterestType poit = new PointOfInterestType("hopshel_burrow", ImmutableSet.copyOf(ModBlocks.hopshel_burrow.get().getStateContainer().getValidStates()), 0, 1);
-			Stream<PointOfInterest> stream = pointofinterestmanager.func_219146_b((pointOfInterest) -> pointOfInterest == poit, blockpos, 20, PointOfInterestManager.Status.ANY);
+			BlockPos blockpos = HopshelEntity.this.blockPosition();
+			PointOfInterestManager pointofinterestmanager = ((ServerWorld) HopshelEntity.this.level).getPoiManager();
+			ImmutableSet.copyOf(ModBlocks.hopshel_burrow.get().getStateDefinition().getPossibleStates());
+			PointOfInterestType poit = new PointOfInterestType("hopshel_burrow", ImmutableSet.copyOf(ModBlocks.hopshel_burrow.get().getStateDefinition().getPossibleStates()), 0, 1);
+			Stream<PointOfInterest> stream = pointofinterestmanager.getInRange((pointOfInterest) -> pointOfInterest == poit, blockpos, 20, PointOfInterestManager.Status.ANY);
 			return stream.map(PointOfInterest::getPos)
 					.filter(HopshelEntity.this::doesBurrowHaveSpace)
-					.sorted(Comparator.comparingDouble((pos) -> pos.distanceSq(blockpos)))
+					.sorted(Comparator.comparingDouble((pos) -> pos.distSqr(blockpos)))
 					.collect(Collectors.toList());
 		}
 	}
 
 	class SuckUpItemGoal extends Goal {
 		@Override
-		public boolean shouldExecute() {
-			List<ItemEntity> list = world.getEntitiesWithinAABB(ItemEntity.class, HopshelEntity.this.getBoundingBox().grow(2.5D, 2.5D, 2.5D), EntityPredicates.IS_ALIVE);
+		public boolean canUse() {
+			List<ItemEntity> list = level.getEntitiesOfClass(ItemEntity.class, HopshelEntity.this.getBoundingBox().inflate(2.5D, 2.5D, 2.5D), EntityPredicates.ENTITY_STILL_ALIVE);
 			return !list.isEmpty() && list.stream().anyMatch(itemEntity -> HopshelEntity.this.canTakeItem(itemEntity.getItem()));
 		}
 
 		@Override
-		public boolean shouldContinueExecuting() {
+		public boolean canContinueToUse() {
 			return false;
 		}
 
 		@Override
-		public void startExecuting() {
-			if (world != null && !world.isRemote) {
+		public void start() {
+			if (level != null && !level.isClientSide) {
 				if (HopshelEntity.this.isOnTransferCooldown()) {
 					return;
 				}
 				//get all items entity can pickUp
-				List<ItemEntity> list = world.getEntitiesWithinAABB(ItemEntity.class, HopshelEntity.this.getBoundingBox().grow(2.5D, 2.5D, 2.5D), EntityPredicates.IS_ALIVE);
+				List<ItemEntity> list = level.getEntitiesOfClass(ItemEntity.class, HopshelEntity.this.getBoundingBox().inflate(2.5D, 2.5D, 2.5D), EntityPredicates.ENTITY_STILL_ALIVE);
 				for (ItemEntity itemEntity : list) {
 					///create a simulated stack of what to insert
 					ItemStack pickupStack = itemEntity.getItem().copy().split(1);
@@ -491,11 +491,11 @@ public class HopshelEntity extends AnimalEntity {
 							ItemStack remaining = itemHandler.insertItem(i, actualPickupStack, false);
 							//if leftover, spawn them in the world
 							if (!remaining.isEmpty()) {
-								ItemEntity item = new ItemEntity(EntityType.ITEM, world);
+								ItemEntity item = new ItemEntity(EntityType.ITEM, level);
 								item.setItem(remaining);
-								item.setPosition(HopshelEntity.this.getPosX() + 0.5f, HopshelEntity.this.getPosY() + 0.5f, HopshelEntity.this.getPosZ() + 0.5f);
-								item.lifespan = remaining.getEntityLifespan(world);
-								world.addEntity(item);
+								item.setPos(HopshelEntity.this.getX() + 0.5f, HopshelEntity.this.getY() + 0.5f, HopshelEntity.this.getZ() + 0.5f);
+								item.lifespan = remaining.getEntityLifespan(level);
+								level.addFreshEntity(item);
 							}
 							HopshelEntity.this.setTransferCooldown(8);
 							return;

@@ -14,30 +14,30 @@ public class HopshelScreen extends ContainerScreen<HopshelContainer> {
 
 	public HopshelScreen(HopshelContainer container, PlayerInventory inv, ITextComponent name) {
 		super(container, inv, name);
-		this.ySize = 133;
-		this.playerInventoryTitleY = this.ySize - 94;
+		this.imageHeight = 133;
+		this.inventoryLabelY = this.imageHeight - 94;
 	}
 
 	@Override
 	public void render(MatrixStack matrixStack, int mouseX, int mouseY, float partialTicks) {
 		this.renderBackground(matrixStack);
 		super.render(matrixStack, mouseX, mouseY, partialTicks);
-		this.renderHoveredTooltip(matrixStack, mouseX, mouseY);
+		this.renderTooltip(matrixStack, mouseX, mouseY);
 	}
 
 	@Override
-	protected void drawGuiContainerForegroundLayer(MatrixStack matrixStack, int x, int y) {
-		super.drawGuiContainerForegroundLayer(matrixStack, x, y);
-		this.font.func_243248_b(matrixStack, this.title, (float) this.titleX, (float) this.titleY, 4210752);
-		this.font.func_243248_b(matrixStack, this.playerInventory.getDisplayName(), (float) this.playerInventoryTitleX, (float) this.playerInventoryTitleY, 4210752);
+	protected void renderLabels(MatrixStack matrixStack, int x, int y) {
+		super.renderLabels(matrixStack, x, y);
+		this.font.draw(matrixStack, this.title, (float) this.titleLabelX, (float) this.titleLabelY, 4210752);
+		this.font.draw(matrixStack, this.inventory.getDisplayName(), (float) this.inventoryLabelX, (float) this.inventoryLabelY, 4210752);
 	}
 
 	@Override
-	protected void drawGuiContainerBackgroundLayer(MatrixStack matrixStack, float partialTicks, int x, int y) {
+	protected void renderBg(MatrixStack matrixStack, float partialTicks, int x, int y) {
 		RenderSystem.color4f(1.0F, 1.0F, 1.0F, 1.0F);
-		this.minecraft.getTextureManager().bindTexture(GUI);
-		int relX = (this.width - this.xSize) / 2;
-		int relY = (this.height - this.ySize) / 2;
-		this.blit(matrixStack, relX, relY, 0, 0, this.xSize, this.ySize);
+		this.minecraft.getTextureManager().bind(GUI);
+		int relX = (this.width - this.imageWidth) / 2;
+		int relY = (this.height - this.imageHeight) / 2;
+		this.blit(matrixStack, relX, relY, 0, 0, this.imageWidth, this.imageHeight);
 	}
 }

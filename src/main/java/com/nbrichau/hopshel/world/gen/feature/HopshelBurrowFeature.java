@@ -22,12 +22,12 @@ public class HopshelBurrowFeature extends Feature<NoFeatureConfig> {
 	}
 
 	@Override
-	public boolean generate(ISeedReader reader, ChunkGenerator generator, Random rand, BlockPos pos, NoFeatureConfig config) {
-		if (reader.getBlockState(pos).getBlock().matchesBlock(Blocks.AIR) && reader.getBlockState(pos.down()).getBlock().matchesBlock(Blocks.END_STONE)) {
-			BlockPos posBurrow = pos.down();
-			HopshelMod.LOGGER.debug("Generation of the feature at position : " + posBurrow.getCoordinatesAsString());
-			BlockState hopshel_burrow = ModBlocks.hopshel_burrow.get().getDefaultState();
-			BlockState endstone_gravel = ModBlocks.endstone_gravel.get().getDefaultState();
+	public boolean place(ISeedReader reader, ChunkGenerator generator, Random rand, BlockPos pos, NoFeatureConfig config) {
+		if (reader.getBlockState(pos).getBlock().is(Blocks.AIR) && reader.getBlockState(pos.below()).getBlock().is(Blocks.END_STONE)) {
+			BlockPos posBurrow = pos.below();
+			HopshelMod.LOGGER.debug("Generation of the feature at position : " + posBurrow.toShortString());
+			BlockState hopshel_burrow = ModBlocks.hopshel_burrow.get().defaultBlockState();
+			BlockState endstone_gravel = ModBlocks.endstone_gravel.get().defaultBlockState();
 			/*       Sz
 			        4 4
 			      4 3 2 2 4
@@ -40,56 +40,56 @@ public class HopshelBurrowFeature extends Feature<NoFeatureConfig> {
 			 */
 			for (int i = -1; i < 2; i++) {
 				for (int j = -1; j < 2; j++) {
-					this.tryPlaceBlockUp(reader, posBurrow.add(i, 0, j), endstone_gravel);
+					this.tryPlaceBlockUp(reader, posBurrow.offset(i, 0, j), endstone_gravel);
 				}
 			}
-			this.tryPlaceBlockUp(reader, posBurrow.add(-1, 0, 1), Blocks.END_STONE.getDefaultState());
-			reader.setBlockState(posBurrow, hopshel_burrow, 2);
+			this.tryPlaceBlockUp(reader, posBurrow.offset(-1, 0, 1), Blocks.END_STONE.defaultBlockState());
+			reader.setBlock(posBurrow, hopshel_burrow, 2);
 			int rnd = rand.nextInt(10);
 			System.out.println("--" + rnd);
 			if (rnd >= 1) {
 				this.tryPlaceBlockUp(reader, posBurrow.south(2), endstone_gravel);
-				this.tryPlaceBlockUp(reader, posBurrow.add(1, 0, 2), endstone_gravel);
-				this.tryPlaceBlockUp(reader, posBurrow.add(2, 0, 1), endstone_gravel);
+				this.tryPlaceBlockUp(reader, posBurrow.offset(1, 0, 2), endstone_gravel);
+				this.tryPlaceBlockUp(reader, posBurrow.offset(2, 0, 1), endstone_gravel);
 				this.tryPlaceBlockUp(reader, posBurrow.east(2), endstone_gravel);
 				this.tryPlaceBlockUp(reader, posBurrow.north(2), endstone_gravel);
-				this.tryPlaceBlockUp(reader, posBurrow.add(-1, 0, -2), endstone_gravel);
+				this.tryPlaceBlockUp(reader, posBurrow.offset(-1, 0, -2), endstone_gravel);
 				this.tryPlaceBlockUp(reader, posBurrow.west(2), endstone_gravel);
-				this.tryPlaceBlockUp(reader, posBurrow.add(-1, 0, 1), endstone_gravel);
+				this.tryPlaceBlockUp(reader, posBurrow.offset(-1, 0, 1), endstone_gravel);
 			}
 			if (rnd >= 3) {
 				this.tryPlaceBlockUp(reader, posBurrow.south(3), endstone_gravel);
-				this.tryPlaceBlockUp(reader, posBurrow.add(2, 0, -1), endstone_gravel);
-				this.tryPlaceBlockUp(reader, posBurrow.add(1, 0, -2), endstone_gravel);
-				this.tryPlaceBlockUp(reader, posBurrow.add(-2, 0, -1), endstone_gravel);
-				this.tryPlaceBlockUp(reader, posBurrow.add(-2, 0, 1), endstone_gravel);
-				this.tryPlaceBlockUp(reader, posBurrow.add(-2, 0, 2), endstone_gravel);
-				this.tryPlaceBlockUp(reader, posBurrow.add(-1, 0, 2), endstone_gravel);
-				this.tryPlaceBlockUp(reader, posBurrow.add(-1, 0, 3), endstone_gravel);
+				this.tryPlaceBlockUp(reader, posBurrow.offset(2, 0, -1), endstone_gravel);
+				this.tryPlaceBlockUp(reader, posBurrow.offset(1, 0, -2), endstone_gravel);
+				this.tryPlaceBlockUp(reader, posBurrow.offset(-2, 0, -1), endstone_gravel);
+				this.tryPlaceBlockUp(reader, posBurrow.offset(-2, 0, 1), endstone_gravel);
+				this.tryPlaceBlockUp(reader, posBurrow.offset(-2, 0, 2), endstone_gravel);
+				this.tryPlaceBlockUp(reader, posBurrow.offset(-1, 0, 2), endstone_gravel);
+				this.tryPlaceBlockUp(reader, posBurrow.offset(-1, 0, 3), endstone_gravel);
 			}
 			if (rnd >= 5) {
-				this.tryPlaceBlockUp(reader, posBurrow.add(1, 0, 3), endstone_gravel);
-				this.tryPlaceBlockUp(reader, posBurrow.add(2, 0, 2), endstone_gravel);
+				this.tryPlaceBlockUp(reader, posBurrow.offset(1, 0, 3), endstone_gravel);
+				this.tryPlaceBlockUp(reader, posBurrow.offset(2, 0, 2), endstone_gravel);
 				this.tryPlaceBlockUp(reader, posBurrow.east(3), endstone_gravel);
-				this.tryPlaceBlockUp(reader, posBurrow.add(3, 0, -1), endstone_gravel);
-				this.tryPlaceBlockUp(reader, posBurrow.add(2, 0, -2), endstone_gravel);
+				this.tryPlaceBlockUp(reader, posBurrow.offset(3, 0, -1), endstone_gravel);
+				this.tryPlaceBlockUp(reader, posBurrow.offset(2, 0, -2), endstone_gravel);
 				this.tryPlaceBlockUp(reader, posBurrow.north(3), endstone_gravel);
-				this.tryPlaceBlockUp(reader, posBurrow.add(-1, 0, -3), endstone_gravel);
-				this.tryPlaceBlockUp(reader, posBurrow.add(-2, 0, -2), endstone_gravel);
-				this.tryPlaceBlockUp(reader, posBurrow.add(-3, 0, -1), endstone_gravel);
+				this.tryPlaceBlockUp(reader, posBurrow.offset(-1, 0, -3), endstone_gravel);
+				this.tryPlaceBlockUp(reader, posBurrow.offset(-2, 0, -2), endstone_gravel);
+				this.tryPlaceBlockUp(reader, posBurrow.offset(-3, 0, -1), endstone_gravel);
 				this.tryPlaceBlockUp(reader, posBurrow.west(3), endstone_gravel);
 			}
 			if (rnd >= 7) {
 				this.tryPlaceBlockUp(reader, posBurrow.south(4), endstone_gravel);
-				this.tryPlaceBlockUp(reader, posBurrow.add(1, 0, 4), endstone_gravel);
-				this.tryPlaceBlockUp(reader, posBurrow.add(2, 0, 3), endstone_gravel);
-				this.tryPlaceBlockUp(reader, posBurrow.add(3, 0, 2), endstone_gravel);
-				this.tryPlaceBlockUp(reader, posBurrow.add(3, 0, 1), endstone_gravel);
-				this.tryPlaceBlockUp(reader, posBurrow.add(2, 0, -3), endstone_gravel);
-				this.tryPlaceBlockUp(reader, posBurrow.add(1, 0, -3), endstone_gravel);
-				this.tryPlaceBlockUp(reader, posBurrow.add(-3, 0, 1), endstone_gravel);
-				this.tryPlaceBlockUp(reader, posBurrow.add(-3, 0, 2), endstone_gravel);
-				this.tryPlaceBlockUp(reader, posBurrow.add(-2, 0, 3), endstone_gravel);
+				this.tryPlaceBlockUp(reader, posBurrow.offset(1, 0, 4), endstone_gravel);
+				this.tryPlaceBlockUp(reader, posBurrow.offset(2, 0, 3), endstone_gravel);
+				this.tryPlaceBlockUp(reader, posBurrow.offset(3, 0, 2), endstone_gravel);
+				this.tryPlaceBlockUp(reader, posBurrow.offset(3, 0, 1), endstone_gravel);
+				this.tryPlaceBlockUp(reader, posBurrow.offset(2, 0, -3), endstone_gravel);
+				this.tryPlaceBlockUp(reader, posBurrow.offset(1, 0, -3), endstone_gravel);
+				this.tryPlaceBlockUp(reader, posBurrow.offset(-3, 0, 1), endstone_gravel);
+				this.tryPlaceBlockUp(reader, posBurrow.offset(-3, 0, 2), endstone_gravel);
+				this.tryPlaceBlockUp(reader, posBurrow.offset(-2, 0, 3), endstone_gravel);
 			}
 			this.spawnHopshel(reader, posBurrow, rand);
 			return true;
@@ -98,23 +98,23 @@ public class HopshelBurrowFeature extends Feature<NoFeatureConfig> {
 	}
 
 	private void spawnHopshel(ISeedReader world, BlockPos pos, Random rand) {
-		BlockPos offset = pos.up();
+		BlockPos offset = pos.above();
 		for (int i = 0; i < rand.nextInt(2); i++) {
-			HopshelEntity hopshel = HopshelMod.HOPSHEL_ENTITY.get().create(world.getWorld());
+			HopshelEntity hopshel = HopshelMod.HOPSHEL_ENTITY.get().create(world.getLevel());
 			if (hopshel != null) {
-				hopshel.setLocationAndAngles(offset.getX() + 0.5F, offset.getY() + 0.1F, offset.getZ() + 0.5F, 0.0F, 0.0F);
-				hopshel.onInitialSpawn(world, world.getDifficultyForLocation(offset), SpawnReason.STRUCTURE, null, null);
+				hopshel.moveTo(offset.getX() + 0.5F, offset.getY() + 0.1F, offset.getZ() + 0.5F, 0.0F, 0.0F);
+				hopshel.finalizeSpawn(world, world.getCurrentDifficultyAt(offset), SpawnReason.STRUCTURE, null, null);
 				hopshel.setBurrowPos(pos);
-				world.addEntity(hopshel);
+				world.addFreshEntity(hopshel);
 			}
 		}
 	}
 
 	private void tryPlaceBlockUp(ISeedReader world, BlockPos pos, BlockState blockState) {
-		if (world.getBlockState(pos.up()).isIn(Blocks.END_STONE)) {
-			this.tryPlaceBlockUp(world, pos.up(), blockState);
+		if (world.getBlockState(pos.above()).is(Blocks.END_STONE)) {
+			this.tryPlaceBlockUp(world, pos.above(), blockState);
 		} else {
-			world.setBlockState(pos, blockState, 2);
+			world.setBlock(pos, blockState, 2);
 		}
 	}
 }

@@ -17,7 +17,7 @@ public class HopshelRenderer extends MobRenderer<HopshelEntity, HopshelModel> {
 	}
 
 	@Override
-	public ResourceLocation getEntityTexture(HopshelEntity entity) {
+	public ResourceLocation getTextureLocation(HopshelEntity entity) {
 		return HOPSHEL_TEXTURES;
 	}
 

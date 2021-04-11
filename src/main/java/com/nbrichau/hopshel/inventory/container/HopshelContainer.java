@@ -22,7 +22,7 @@ public class HopshelContainer extends Container {
 
 	public HopshelContainer(int windowId, World world, PlayerInventory playerInventory, PlayerEntity playerEntity, int hopshelId) {
 		super(HopshelMod.HOPSHEL_CONTAINER.get(), windowId);
-		hopshelEntity = (HopshelEntity) world.getEntityByID(hopshelId);
+		hopshelEntity = (HopshelEntity) world.getEntity(hopshelId);
 		this.playerEntity = playerEntity;
 		this.playerInventory = new InvWrapper(playerInventory);
 		if (hopshelEntity != null) {
@@ -36,17 +36,17 @@ public class HopshelContainer extends Container {
 	}
 
 	@Override
-	public boolean canInteractWith(PlayerEntity playerIn) {
+	public boolean stillValid(PlayerEntity playerIn) {
 		if (hopshelEntity == null) {
 			return false;
 		}
-		return hopshelEntity.getDistance(playerEntity) < 8.0f;
+		return hopshelEntity.distanceTo(playerEntity) < 8.0f;
 	}
 
 	@Override
-	public void onContainerClosed(PlayerEntity playerIn) {
+	public void removed(PlayerEntity playerIn) {
 		hopshelEntity.setInventoryClosed();
-		super.onContainerClosed(playerIn);
+		super.removed(playerIn);
 	}
 
 	private int addSlotRange(IItemHandler handler, int index, int x, int y, int amount, int dx) {
@@ -73,27 +73,27 @@ public class HopshelContainer extends Container {
 	}
 
 	@Override
-	public ItemStack transferStackInSlot(PlayerEntity playerIn, int index) {
+	public ItemStack quickMoveStack(PlayerEntity playerIn, int index) {
 		ItemStack itemstack = ItemStack.EMPTY;
-		Slot slot = this.inventorySlots.get(index);
-		if (slot != null && slot.getHasStack()) {
-			ItemStack itemstack1 = slot.getStack();
+		Slot slot = this.slots.get(index);
+		if (slot != null && slot.hasItem()) {
+			ItemStack itemstack1 = slot.getItem();
 			itemstack = itemstack1.copy();
 			Optional<IItemHandler> hopshelInventory = hopshelEntity.getCapability(CapabilityItemHandler.ITEM_HANDLER_CAPABILITY).resolve();
 			if (!hopshelInventory.isPresent()) {
 				return ItemStack.EMPTY;
 			}
 			if (index < hopshelInventory.get().getSlots()) {
-				if (!this.mergeItemStack(itemstack1, hopshelInventory.get().getSlots(), this.inventorySlots.size(), true)) {
+				if (!this.moveItemStackTo(itemstack1, hopshelInventory.get().getSlots(), this.slots.size(), true)) {
 					return ItemStack.EMPTY;
 				}
-			} else if (!this.mergeItemStack(itemstack1, 0, hopshelInventory.get().getSlots(), false)) {
+			} else if (!this.moveItemStackTo(itemstack1, 0, hopshelInventory.get().getSlots(), false)) {
 				return ItemStack.EMPTY;
 			}
 			if (itemstack1.isEmpty()) {
-				slot.putStack(ItemStack.EMPTY);
+				slot.set(ItemStack.EMPTY);
 			} else {
-				slot.onSlotChanged();
+				slot.setChanged();
 			}
 		}
 		return itemstack;
