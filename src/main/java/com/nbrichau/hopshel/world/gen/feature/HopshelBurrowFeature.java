@@ -100,7 +100,7 @@ public class HopshelBurrowFeature extends Feature<NoFeatureConfig> {
 	private void spawnHopshel(ISeedReader world, BlockPos pos, Random rand) {
 		BlockPos offset = pos.above();
 		for (int i = 0; i < rand.nextInt(2); i++) {
-			HopshelEntity hopshel = HopshelMod.HOPSHEL_ENTITY.get().create(world.getLevel());
+			HopshelEntity hopshel = HopshelMod.hopshel_entity.get().create(world.getLevel());
 			if (hopshel != null) {
 				hopshel.moveTo(offset.getX() + 0.5F, offset.getY() + 0.1F, offset.getZ() + 0.5F, 0.0F, 0.0F);
 				hopshel.finalizeSpawn(world, world.getCurrentDifficultyAt(offset), SpawnReason.STRUCTURE, null, null);

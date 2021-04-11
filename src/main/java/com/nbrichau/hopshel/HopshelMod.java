@@ -52,17 +52,16 @@ public class HopshelMod {
 	public static final DeferredRegister<TileEntityType<?>> TILES = DeferredRegister.create(ForgeRegistries.TILE_ENTITIES, MODID);
 	public static final DeferredRegister<ContainerType<?>> CONTAINERS = DeferredRegister.create(ForgeRegistries.CONTAINERS, MODID);
 
-	public static final RegistryObject<EntityType<HopshelEntity>> HOPSHEL_ENTITY = ENTITY_TYPES
-			.register("hopshel", () -> EntityType.Builder.of(HopshelEntity::new, EntityClassification.CREATURE)
+	public static final RegistryObject<EntityType<HopshelEntity>> hopshel_entity = ENTITY_TYPES
+			.register("hopshel_entity", () -> EntityType.Builder.of(HopshelEntity::new, EntityClassification.CREATURE)
 					.sized(0.5F, 0.5F)
-					.build(new ResourceLocation(MODID, "hopshel").toString()));
+					.build(new ResourceLocation(MODID, "hopshel_entity").toString()));
 
-	public static final RegistryObject<ContainerType<HopshelContainer>> HOPSHEL_CONTAINER = CONTAINERS.register("hopshel_container", () -> IForgeContainerType.create((windowId, inv, data) -> {
+	public static final RegistryObject<ContainerType<HopshelContainer>> hopshel_container = CONTAINERS.register("hopshel_container", () -> IForgeContainerType.create((windowId, inv, data) -> {
 		return new HopshelContainer(windowId, inv.player.getCommandSenderWorld(), inv, inv.player, data.readInt());
 	}));
 
 	public static final ConfiguredFeature<?, ?> hopshel_burrow_configured = new HopshelBurrowFeature(NoFeatureConfig.CODEC).configured(IFeatureConfig.NONE).decorated(Features.Placements.HEIGHTMAP_SQUARE).decorated(Placement.COUNT_NOISE.configured(new NoiseDependant(-0.8, 1, 0)));
-
 
 	public HopshelMod() {
 		final IEventBus modEventBus = FMLJavaModLoadingContext.get().getModEventBus();
@@ -81,12 +80,12 @@ public class HopshelMod {
 	}
 
 	private void setup(final FMLCommonSetupEvent event) {
-		event.enqueueWork(() -> GlobalEntityTypeAttributes.put(HOPSHEL_ENTITY.get(), HopshelEntity.registerAttributes().build()));
+		event.enqueueWork(() -> GlobalEntityTypeAttributes.put(hopshel_entity.get(), HopshelEntity.registerAttributes().build()));
 	}
 
 	private void clientSetup(final FMLClientSetupEvent event) {
-		RenderingRegistry.registerEntityRenderingHandler(HOPSHEL_ENTITY.get(), HopshelRenderer::new);
-		ScreenManager.register(HOPSHEL_CONTAINER.get(), HopshelScreen::new);
+		RenderingRegistry.registerEntityRenderingHandler(hopshel_entity.get(), HopshelRenderer::new);
+		ScreenManager.register(hopshel_container.get(), HopshelScreen::new);
 	}
 
 	@SubscribeEvent
@@ -100,7 +99,7 @@ public class HopshelMod {
 		if (name == null) {
 			return;
 		}
-		if(name.equals(Biomes.END_HIGHLANDS.location())) {
+		if (name.equals(Biomes.END_HIGHLANDS.location())) {
 			event.getGeneration().getFeatures(GenerationStage.Decoration.LOCAL_MODIFICATIONS).add(() -> hopshel_burrow_configured);
 		}
 	}

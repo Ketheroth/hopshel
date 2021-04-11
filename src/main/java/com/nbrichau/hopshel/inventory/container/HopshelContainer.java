@@ -21,7 +21,7 @@ public class HopshelContainer extends Container {
 	private IItemHandler playerInventory;
 
 	public HopshelContainer(int windowId, World world, PlayerInventory playerInventory, PlayerEntity playerEntity, int hopshelId) {
-		super(HopshelMod.HOPSHEL_CONTAINER.get(), windowId);
+		super(HopshelMod.hopshel_container.get(), windowId);
 		hopshelEntity = (HopshelEntity) world.getEntity(hopshelId);
 		this.playerEntity = playerEntity;
 		this.playerInventory = new InvWrapper(playerInventory);

@@ -3,6 +3,7 @@ package com.nbrichau.hopshel.entity;
 import com.google.common.collect.ImmutableSet;
 import com.nbrichau.hopshel.block.ModBlocks;
 import com.nbrichau.hopshel.inventory.container.HopshelContainer;
+import com.nbrichau.hopshel.items.ModItems;
 import com.nbrichau.hopshel.tileentity.BurrowTileEntity;
 import net.minecraft.enchantment.EnchantmentHelper;
 import net.minecraft.entity.*;
@@ -30,6 +31,7 @@ import net.minecraft.util.Direction;
 import net.minecraft.util.EntityPredicates;
 import net.minecraft.util.Hand;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.RayTraceResult;
 import net.minecraft.util.math.vector.Vector3d;
 import net.minecraft.util.text.ITextComponent;
 import net.minecraft.util.text.TranslationTextComponent;
@@ -68,7 +70,7 @@ public class HopshelEntity extends AnimalEntity {
 	}
 
 	public static AttributeModifierMap.MutableAttribute registerAttributes() {
-		return MobEntity.createMobAttributes().add(Attributes.MAX_HEALTH, 24.0D).add(Attributes.MOVEMENT_SPEED, 0.3F);
+		return MobEntity.createMobAttributes().add(Attributes.MAX_HEALTH, 18.0D).add(Attributes.MOVEMENT_SPEED, 0.3F);
 	}
 
 	@Override
@@ -86,7 +88,9 @@ public class HopshelEntity extends AnimalEntity {
 	@Override
 	public void addAdditionalSaveData(CompoundNBT compound) {
 		super.addAdditionalSaveData(compound);
-		compound.put("BurrowPos", NBTUtil.writeBlockPos(this.getBurrowPos()));
+		if (this.getBurrowPos() != null) {
+			compound.put("BurrowPos", NBTUtil.writeBlockPos(this.getBurrowPos()));
+		}
 		compound.put("Inventory", itemHandler.serializeNBT());
 	}
 
@@ -165,6 +169,11 @@ public class HopshelEntity extends AnimalEntity {
 			NetworkHooks.openGui((ServerPlayerEntity) playerEntity, containerProvider, buf -> buf.writeInt(HopshelEntity.this.getId()));
 		}
 		return super.mobInteract(playerEntity, handIn);
+	}
+
+	@Override
+	public ItemStack getPickedResult(RayTraceResult target) {
+		return new ItemStack(ModItems.hopshel_spawn_egg.get());
 	}
 
 	@Override
@@ -264,9 +273,11 @@ public class HopshelEntity extends AnimalEntity {
 		for (int i = 0; i < itemHandler.getSlots(); i++) {
 			ItemStack stackInSlot = itemHandler.getStackInSlot(i);
 			if (stackInSlot.isEmpty() || (stackInSlot.sameItem(itemStack) && stackInSlot.getCount() < stackInSlot.getMaxStackSize())) {
+				System.out.println("true");
 				return true;
 			}
 		}
+		System.out.println("false");
 		return false;
 	}
 
