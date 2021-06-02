@@ -119,12 +119,12 @@ public class HopshelEntity extends AnimalEntity {
 		goalSelector.addGoal(6, new WaterAvoidingRandomWalkingGoal(this, 0.7D) {
 			@Override
 			public boolean canUse() {
-				return !HopshelEntity.this.inventoryOpen && super.canUse();
+				return !HopshelEntity.this.inventoryOpen && !isInventoryFull() && super.canUse();
 			}
 
 			@Override
 			public boolean canContinueToUse() {
-				return !HopshelEntity.this.inventoryOpen && super.canContinueToUse();
+				return !HopshelEntity.this.inventoryOpen && !isInventoryFull() && super.canContinueToUse();
 			}
 		});
 		goalSelector.addGoal(7, new LookAtGoal(this, PlayerEntity.class, 6.0F));
@@ -263,6 +263,20 @@ public class HopshelEntity extends AnimalEntity {
 		} else {
 			return false;
 		}
+	}
+
+	private boolean haveToFindBurrrow() {
+		return !hasBurrow() && isInventoryFull();
+	}
+
+	private boolean isInventoryFull() {
+		for (int i = 0; i < itemHandler.getSlots(); i++) {
+			ItemStack stackInSlot = itemHandler.getStackInSlot(i);
+			if (stackInSlot.isEmpty()) {
+				return false;
+			}
+		}
+		return true;
 	}
 
 	public void setInventoryClosed() {
