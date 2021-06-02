@@ -1,6 +1,7 @@
-package com.nbrichau.hopshel.items;
+package com.nbrichau.hopshel.common.item;
 
-import com.nbrichau.hopshel.HopshelMod;
+import com.nbrichau.hopshel.core.HopshelMod;
+import com.nbrichau.hopshel.core.registry.HopshelEntityTypes;
 import net.minecraft.block.BlockState;
 import net.minecraft.entity.SpawnReason;
 import net.minecraft.item.Item;
@@ -28,7 +29,7 @@ public class HopshelSpawnEgg extends Item {
 	}
 
 	/**
-	 * Called when this item is used when targetting a Block
+	 * Called when this item is used when targeting a Block
 	 */
 	@Override
 	public ActionResultType useOn(ItemUseContext context) {
@@ -43,7 +44,7 @@ public class HopshelSpawnEgg extends Item {
 			TileEntity tileentity = world.getBlockEntity(blockpos);
 			if (tileentity instanceof MobSpawnerTileEntity) {
 				AbstractSpawner abstractspawner = ((MobSpawnerTileEntity) tileentity).getSpawner();
-				abstractspawner.setEntityId(HopshelMod.hopshel_entity.get());
+				abstractspawner.setEntityId(HopshelEntityTypes.HOPSHEL.get());
 				tileentity.setChanged();
 				world.sendBlockUpdated(blockpos, blockstate, blockstate, Constants.BlockFlags.BLOCK_UPDATE + Constants.BlockFlags.NOTIFY_NEIGHBORS);
 				itemstack.shrink(1);
@@ -57,7 +58,7 @@ public class HopshelSpawnEgg extends Item {
 				blockpos1 = blockpos.relative(direction);
 			}
 
-			if (HopshelMod.hopshel_entity.get().spawn((ServerWorld) world, itemstack, context.getPlayer(), blockpos1, SpawnReason.SPAWN_EGG, true, !Objects.equals(blockpos, blockpos1) && direction == Direction.UP) != null) {
+			if (HopshelEntityTypes.HOPSHEL.get().spawn((ServerWorld) world, itemstack, context.getPlayer(), blockpos1, SpawnReason.SPAWN_EGG, true, !Objects.equals(blockpos, blockpos1) && direction == Direction.UP) != null) {
 				itemstack.shrink(1);
 			}
 

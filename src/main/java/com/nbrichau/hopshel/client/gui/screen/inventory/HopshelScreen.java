@@ -2,8 +2,8 @@ package com.nbrichau.hopshel.client.gui.screen.inventory;
 
 import com.mojang.blaze3d.matrix.MatrixStack;
 import com.mojang.blaze3d.systems.RenderSystem;
-import com.nbrichau.hopshel.HopshelMod;
-import com.nbrichau.hopshel.inventory.container.HopshelContainer;
+import com.nbrichau.hopshel.core.HopshelMod;
+import com.nbrichau.hopshel.common.inventory.container.HopshelContainer;
 import net.minecraft.client.gui.screen.inventory.ContainerScreen;
 import net.minecraft.entity.player.PlayerInventory;
 import net.minecraft.util.ResourceLocation;

@@ -1,7 +1,7 @@
-package com.nbrichau.hopshel.tileentity;
+package com.nbrichau.hopshel.common.tileentity;
 
-import com.nbrichau.hopshel.block.ModBlocks;
-import com.nbrichau.hopshel.entity.HopshelEntity;
+import com.nbrichau.hopshel.common.entity.HopshelEntity;
+import com.nbrichau.hopshel.core.registry.HopshelTileEntities;
 import net.minecraft.block.BlockState;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityType;
@@ -21,7 +21,7 @@ public class BurrowTileEntity extends TileEntity implements ITickableTileEntity 
 	private final List<BurrowOccupant> burrowOccupants = new ArrayList<>();
 
 	public BurrowTileEntity() {
-		super(ModBlocks.hopshel_burrow_tile.get());
+		super(HopshelTileEntities.HOPSHEL_BURROW.get());
 	}
 
 	@Override

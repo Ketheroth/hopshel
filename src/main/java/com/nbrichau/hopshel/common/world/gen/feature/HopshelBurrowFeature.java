@@ -1,9 +1,10 @@
-package com.nbrichau.hopshel.world.gen.feature;
+package com.nbrichau.hopshel.common.world.gen.feature;
 
 import com.mojang.serialization.Codec;
-import com.nbrichau.hopshel.HopshelMod;
-import com.nbrichau.hopshel.block.ModBlocks;
-import com.nbrichau.hopshel.entity.HopshelEntity;
+import com.nbrichau.hopshel.core.HopshelMod;
+import com.nbrichau.hopshel.core.registry.HopshelBlocks;
+import com.nbrichau.hopshel.common.entity.HopshelEntity;
+import com.nbrichau.hopshel.core.registry.HopshelEntityTypes;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
 import net.minecraft.entity.SpawnReason;
@@ -26,8 +27,8 @@ public class HopshelBurrowFeature extends Feature<NoFeatureConfig> {
 		if (reader.getBlockState(pos).getBlock().is(Blocks.AIR) && reader.getBlockState(pos.below()).getBlock().is(Blocks.END_STONE)) {
 			BlockPos posBurrow = pos.below();
 			HopshelMod.LOGGER.debug("Generation of the feature at position : " + posBurrow.toShortString());
-			BlockState hopshel_burrow = ModBlocks.hopshel_burrow.get().defaultBlockState();
-			BlockState endstone_gravel = ModBlocks.endstone_gravel.get().defaultBlockState();
+			BlockState hopshel_burrow = HopshelBlocks.HOPSHEL_BURROW.get().defaultBlockState();
+			BlockState endstone_gravel = HopshelBlocks.ENDSTONE_GRAVEL.get().defaultBlockState();
 			/*       Sz
 			        4 4
 			      4 3 2 2 4
@@ -100,7 +101,7 @@ public class HopshelBurrowFeature extends Feature<NoFeatureConfig> {
 	private void spawnHopshel(ISeedReader world, BlockPos pos, Random rand) {
 		BlockPos offset = pos.above();
 		for (int i = 0; i < rand.nextInt(2); i++) {
-			HopshelEntity hopshel = HopshelMod.hopshel_entity.get().create(world.getLevel());
+			HopshelEntity hopshel = HopshelEntityTypes.HOPSHEL.get().create(world.getLevel());
 			if (hopshel != null) {
 				hopshel.moveTo(offset.getX() + 0.5F, offset.getY() + 0.1F, offset.getZ() + 0.5F, 0.0F, 0.0F);
 				hopshel.finalizeSpawn(world, world.getCurrentDifficultyAt(offset), SpawnReason.STRUCTURE, null, null);
@@ -111,6 +112,9 @@ public class HopshelBurrowFeature extends Feature<NoFeatureConfig> {
 	}
 
 	private void tryPlaceBlockUp(ISeedReader world, BlockPos pos, BlockState blockState) {
+		if (pos.getY() >= world.getMaxBuildHeight()) {
+			return;
+		}
 		if (world.getBlockState(pos.above()).is(Blocks.END_STONE)) {
 			this.tryPlaceBlockUp(world, pos.above(), blockState);
 		} else {

@@ -1,10 +1,10 @@
-package com.nbrichau.hopshel.entity;
+package com.nbrichau.hopshel.common.entity;
 
 import com.google.common.collect.ImmutableSet;
-import com.nbrichau.hopshel.block.ModBlocks;
-import com.nbrichau.hopshel.inventory.container.HopshelContainer;
-import com.nbrichau.hopshel.items.ModItems;
-import com.nbrichau.hopshel.tileentity.BurrowTileEntity;
+import com.nbrichau.hopshel.core.registry.HopshelBlocks;
+import com.nbrichau.hopshel.common.inventory.container.HopshelContainer;
+import com.nbrichau.hopshel.core.registry.HopshelItems;
+import com.nbrichau.hopshel.common.tileentity.BurrowTileEntity;
 import net.minecraft.enchantment.EnchantmentHelper;
 import net.minecraft.entity.*;
 import net.minecraft.entity.ai.RandomPositionGenerator;
@@ -173,7 +173,7 @@ public class HopshelEntity extends AnimalEntity {
 
 	@Override
 	public ItemStack getPickedResult(RayTraceResult target) {
-		return new ItemStack(ModItems.hopshel_spawn_egg.get());
+		return new ItemStack(HopshelItems.HOPSHEL_SPAWN_EGG.get());
 	}
 
 	@Override
@@ -347,7 +347,7 @@ public class HopshelEntity extends AnimalEntity {
 
 		@Override
 		public boolean canUse() {
-			return HopshelEntity.this.hasBurrow() && !HopshelEntity.this.hasRestriction() && HopshelEntity.this.canEnterBurrow() && !this.isCloseEnough(HopshelEntity.this.getBurrowPos()) && HopshelEntity.this.level.getBlockState(HopshelEntity.this.getBurrowPos()).is(ModBlocks.hopshel_burrow.get());
+			return HopshelEntity.this.hasBurrow() && !HopshelEntity.this.hasRestriction() && HopshelEntity.this.canEnterBurrow() && !this.isCloseEnough(HopshelEntity.this.getBurrowPos()) && HopshelEntity.this.level.getBlockState(HopshelEntity.this.getBurrowPos()).is(HopshelBlocks.HOPSHEL_BURROW.get());
 		}
 
 		@Override
@@ -474,8 +474,8 @@ public class HopshelEntity extends AnimalEntity {
 		private List<BlockPos> getNearbyFreeBurrow() {
 			BlockPos blockpos = HopshelEntity.this.blockPosition();
 			PointOfInterestManager pointofinterestmanager = ((ServerWorld) HopshelEntity.this.level).getPoiManager();
-			ImmutableSet.copyOf(ModBlocks.hopshel_burrow.get().getStateDefinition().getPossibleStates());
-			PointOfInterestType poit = new PointOfInterestType("hopshel_burrow", ImmutableSet.copyOf(ModBlocks.hopshel_burrow.get().getStateDefinition().getPossibleStates()), 0, 1);
+			ImmutableSet.copyOf(HopshelBlocks.HOPSHEL_BURROW.get().getStateDefinition().getPossibleStates());
+			PointOfInterestType poit = new PointOfInterestType("hopshel_burrow", ImmutableSet.copyOf(HopshelBlocks.HOPSHEL_BURROW.get().getStateDefinition().getPossibleStates()), 0, 1);
 			Stream<PointOfInterest> stream = pointofinterestmanager.getInRange((pointOfInterest) -> pointOfInterest == poit, blockpos, 20, PointOfInterestManager.Status.ANY);
 			return stream.map(PointOfInterest::getPos)
 					.filter(HopshelEntity.this::doesBurrowHaveSpace)

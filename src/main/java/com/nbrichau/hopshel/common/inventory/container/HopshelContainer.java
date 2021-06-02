@@ -1,7 +1,7 @@
-package com.nbrichau.hopshel.inventory.container;
+package com.nbrichau.hopshel.common.inventory.container;
 
-import com.nbrichau.hopshel.HopshelMod;
-import com.nbrichau.hopshel.entity.HopshelEntity;
+import com.nbrichau.hopshel.common.entity.HopshelEntity;
+import com.nbrichau.hopshel.core.registry.HopshelContainerTypes;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.player.PlayerInventory;
 import net.minecraft.inventory.container.Container;
@@ -21,7 +21,7 @@ public class HopshelContainer extends Container {
 	private IItemHandler playerInventory;
 
 	public HopshelContainer(int windowId, World world, PlayerInventory playerInventory, PlayerEntity playerEntity, int hopshelId) {
-		super(HopshelMod.hopshel_container.get(), windowId);
+		super(HopshelContainerTypes.HOPSHEL_CONTAINER.get(), windowId);
 		hopshelEntity = (HopshelEntity) world.getEntity(hopshelId);
 		this.playerEntity = playerEntity;
 		this.playerInventory = new InvWrapper(playerInventory);
