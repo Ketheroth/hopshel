@@ -1,9 +1,7 @@
 package com.nbrichau.hopshel.core;
 
-import com.nbrichau.hopshel.client.gui.screen.inventory.HopshelScreen;
 import com.nbrichau.hopshel.client.renderer.entity.HopshelRenderer;
 import com.nbrichau.hopshel.core.registry.*;
-import net.minecraft.client.gui.ScreenManager;
 import net.minecraft.item.ItemGroup;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
