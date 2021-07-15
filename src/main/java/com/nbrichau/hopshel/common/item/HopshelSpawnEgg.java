@@ -21,7 +21,6 @@ import java.util.Objects;
 
 public class HopshelSpawnEgg extends Item {
 
-
 	public HopshelSpawnEgg() {
 		super(new Item.Properties()
 				.stacksTo(1)

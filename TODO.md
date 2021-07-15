@@ -11,7 +11,7 @@
 -[ ] 15 Hearts
 -[ ] Hopshel tamable : 20% with chorus fruit
 -[ ] when fed chorus : teleport randomly five block radius
--[ ] if tamed, when fed chorus : doesn't teleport, there plate flash white
+-[ ] if tamed, when fed chorus : doesn't teleport, their plate flash white
 -[ ] when tamed, they follow like a dog and can be sat down
 
 # Vacuum
@@ -21,7 +21,7 @@
 -[ ] plates flash white upon getting an item
 
 # Inventory
--[ ] item can be accessed in its inventory only if tamed
+-[ ] item can't be accessed from the hopshel
 -[ ] inventory have 8 slots
 -[ ] killing hopshel drop all stored items
 

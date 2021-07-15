@@ -1,10 +1,9 @@
 package com.nbrichau.hopshel.common.entity;
 
 import com.google.common.collect.ImmutableSet;
-import com.nbrichau.hopshel.core.registry.HopshelBlocks;
-import com.nbrichau.hopshel.common.inventory.container.HopshelContainer;
-import com.nbrichau.hopshel.core.registry.HopshelItems;
 import com.nbrichau.hopshel.common.tileentity.BurrowTileEntity;
+import com.nbrichau.hopshel.core.registry.HopshelBlocks;
+import com.nbrichau.hopshel.core.registry.HopshelItems;
 import net.minecraft.enchantment.EnchantmentHelper;
 import net.minecraft.entity.*;
 import net.minecraft.entity.ai.RandomPositionGenerator;
@@ -14,11 +13,8 @@ import net.minecraft.entity.ai.goal.*;
 import net.minecraft.entity.item.ItemEntity;
 import net.minecraft.entity.passive.AnimalEntity;
 import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.entity.player.PlayerInventory;
-import net.minecraft.entity.player.ServerPlayerEntity;
-import net.minecraft.inventory.container.Container;
-import net.minecraft.inventory.container.INamedContainerProvider;
 import net.minecraft.item.ItemStack;
+import net.minecraft.item.Items;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.nbt.NBTUtil;
 import net.minecraft.network.datasync.DataParameter;
@@ -33,8 +29,6 @@ import net.minecraft.util.Hand;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.RayTraceResult;
 import net.minecraft.util.math.vector.Vector3d;
-import net.minecraft.util.text.ITextComponent;
-import net.minecraft.util.text.TranslationTextComponent;
 import net.minecraft.village.PointOfInterest;
 import net.minecraft.village.PointOfInterestManager;
 import net.minecraft.village.PointOfInterestType;
@@ -44,7 +38,6 @@ import net.minecraft.world.World;
 import net.minecraft.world.server.ServerWorld;
 import net.minecraftforge.common.capabilities.Capability;
 import net.minecraftforge.common.util.LazyOptional;
-import net.minecraftforge.fml.network.NetworkHooks;
 import net.minecraftforge.items.CapabilityItemHandler;
 import net.minecraftforge.items.IItemHandler;
 import net.minecraftforge.items.ItemStackHandler;
@@ -56,6 +49,7 @@ import java.util.stream.Stream;
 
 // TODO: 01/03/2021 Make the entity go in the burrow
 public class HopshelEntity extends AnimalEntity {
+
 	private static final DataParameter<Optional<BlockPos>> BURROW_POS = EntityDataManager.defineId(HopshelEntity.class, DataSerializers.OPTIONAL_BLOCK_POS);
 	private ItemStackHandler itemHandler = this.createHandler();//internal
 	private LazyOptional<IItemHandler> handler = LazyOptional.of(() -> itemHandler);//external capability
@@ -151,22 +145,10 @@ public class HopshelEntity extends AnimalEntity {
 
 	@Override
 	public ActionResultType mobInteract(PlayerEntity playerEntity, Hand handIn) {//onRightCLick
-		if (!level.isClientSide()) {
-			INamedContainerProvider containerProvider = new INamedContainerProvider() {
-				@Override
-				public ITextComponent getDisplayName() {
-					return new TranslationTextComponent("screen.hopshel.hopshel_inventory");
-				}
-
-				@Nullable
-				@Override
-				public Container createMenu(int id, PlayerInventory playerInventory, PlayerEntity player) {
-					return new HopshelContainer(id, level, playerInventory, player, HopshelEntity.this.getId());
-				}
-			};
-			inventoryOpen = true;
-			navigation.stop();// TODO: 01/03/2021 stop entity moving when inventory is open
-			NetworkHooks.openGui((ServerPlayerEntity) playerEntity, containerProvider, buf -> buf.writeInt(HopshelEntity.this.getId()));
+		if (playerEntity.getItemInHand(handIn).getItem().equals(Items.STICK)) {
+			for (int i = 0; i < itemHandler.getSlots(); i++) {
+				System.out.println("Item " + i + " : " + itemHandler.getStackInSlot(i).toString());
+			}
 		}
 		return super.mobInteract(playerEntity, handIn);
 	}
@@ -304,6 +286,7 @@ public class HopshelEntity extends AnimalEntity {
 	}
 
 	class EnterBurrowGoal extends Goal {
+
 		@Override
 		public boolean canUse() {
 			if (HopshelEntity.this.hasBurrow() && HopshelEntity.this.canEnterBurrow() && HopshelEntity.this.getBurrowPos().closerThan(HopshelEntity.this.position(), 2.0D)) {
@@ -332,9 +315,11 @@ public class HopshelEntity extends AnimalEntity {
 				burrowTileEntity.tryEnterBurrow(HopshelEntity.this, 50);//with random ?
 			}
 		}
+
 	}
 
 	class FindBurrowGoal extends Goal {
+
 		private int ticks = HopshelEntity.this.level.random.nextInt(10);
 		private List<BlockPos> possibleBurrows = new ArrayList<>();
 		@Nullable
@@ -439,9 +424,11 @@ public class HopshelEntity extends AnimalEntity {
 				return path != null && path.getTarget().equals(pos) && path.canReach() && path.isDone();
 			}
 		}
+
 	}
 
 	class UpdateBurrowGoal extends Goal {
+
 		private UpdateBurrowGoal() {
 		}
 
@@ -482,9 +469,11 @@ public class HopshelEntity extends AnimalEntity {
 					.sorted(Comparator.comparingDouble((pos) -> pos.distSqr(blockpos)))
 					.collect(Collectors.toList());
 		}
+
 	}
 
 	class SuckUpItemGoal extends Goal {
+
 		@Override
 		public boolean canUse() {
 			List<ItemEntity> list = level.getEntitiesOfClass(ItemEntity.class, HopshelEntity.this.getBoundingBox().inflate(2.5D, 2.5D, 2.5D), EntityPredicates.ENTITY_STILL_ALIVE);
@@ -529,5 +518,7 @@ public class HopshelEntity extends AnimalEntity {
 				}
 			}
 		}
+
 	}
+
 }

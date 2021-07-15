@@ -35,7 +35,6 @@ public class HopshelMod {
 		HopshelBlocks.BLOCKS.register(modEventBus);
 		HopshelEntityTypes.ENTITY_TYPES.register(modEventBus);
 		HopshelTileEntities.TILES.register(modEventBus);
-		HopshelContainerTypes.CONTAINERS.register(modEventBus);
 
 		MinecraftForge.EVENT_BUS.register(this);
 	}
@@ -46,7 +45,6 @@ public class HopshelMod {
 
 	private void clientSetup(final FMLClientSetupEvent event) {
 		RenderingRegistry.registerEntityRenderingHandler(HopshelEntityTypes.HOPSHEL.get(), HopshelRenderer::new);
-		ScreenManager.register(HopshelContainerTypes.HOPSHEL_CONTAINER.get(), HopshelScreen::new);
 	}
 
 	public static class HopshelGroup extends ItemGroup {

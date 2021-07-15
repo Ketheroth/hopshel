@@ -1,6 +1,5 @@
 {
 	"block.hopshel.endstone_gravel": "Endstone Gravel",
 	"block.hopshel.hopshel_burrow": "Hopshel Burrow",
-	"entity.hopshel.hopshel": "Hopshel",
-	"screen.hopshel.hopshel_inventory" : "Hopshel Inventory"
+	"entity.hopshel.hopshel": "Hopshel"
 }
