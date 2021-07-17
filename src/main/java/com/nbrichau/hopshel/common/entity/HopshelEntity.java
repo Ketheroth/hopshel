@@ -33,7 +33,7 @@ public class HopshelEntity extends AnimalEntity {
 	public HopshelEntity(EntityType<? extends AnimalEntity> type, World worldIn) {
 		super(type, worldIn);
 		this.cooldownTime = 0;
-		this.setCanPickUpLoot(true);
+		this.setCanPickUpLoot(false);
 	}
 
 	public static AttributeModifierMap.MutableAttribute registerAttributes() {
@@ -80,7 +80,7 @@ public class HopshelEntity extends AnimalEntity {
 		if (!this.level.isClientSide) {
 			if (playerEntity.getItemInHand(handIn).getItem().equals(Items.STICK)) {
 				for (int i = 0; i < items.getSlots(); i++) {
-					System.out.println("Item " + i + " : " + items.getStackInSlot(i).toString());
+					System.out.println("Item " + i + " : " + items.getStackInSlot(i));
 				}
 			}
 		}
@@ -99,7 +99,7 @@ public class HopshelEntity extends AnimalEntity {
 
 	@Override
 	public void aiStep() {
-		if (!this.level.isClientSide) {
+		if (!this.level.isClientSide && this.isAlive()) {
 			cooldownTime--;
 			if (cooldownTime < 0 && !isInventoryFull()) {
 				this.tryAbsorbItems();
@@ -124,52 +124,56 @@ public class HopshelEntity extends AnimalEntity {
 	private boolean isInventoryFull() {
 		for (int i = 0; i < items.getSlots(); i++) {
 			ItemStack stackInSlot = items.getStackInSlot(i);
-			if (stackInSlot.isEmpty()) {
+			if (stackInSlot.isEmpty() || stackInSlot.getCount() < stackInSlot.getMaxStackSize()) {
 				return false;
 			}
 		}
 		return true;
 	}
 
-//	public boolean canTakeItem(ItemStack itemStack) {
-//		for (int i = 0; i < items.getSlots(); i++) {
-//			ItemStack stackInSlot = items.getStackInSlot(i);
-//			if (stackInSlot.isEmpty() || (stackInSlot.sameItem(itemStack) && stackInSlot.getCount() < stackInSlot.getMaxStackSize())) {
-//				System.out.println("true");
-//				return true;
-//			}
-//		}
-//		System.out.println("false");
-//		return false;
-//	}
-
 	private void tryAbsorbItems() {
 		if (level != null && !level.isClientSide) {
-			//get all items entity can pickUp
 			List<ItemEntity> list = level.getEntitiesOfClass(ItemEntity.class, this.getBoundingBox().inflate(2.5D, 2.5D, 2.5D), EntityPredicates.ENTITY_STILL_ALIVE);
 			for (ItemEntity itemEntity : list) {
-				///create a simulated stack of what to insert
-				ItemStack pickupStack = itemEntity.getItem().copy().split(1);
-				for (int i = 0; i < items.getSlots(); i++) {
-					//is the item accepted into the slot ?
-					if (items.isItemValid(i, pickupStack) && items.insertItem(i, pickupStack, true).getCount() != pickupStack.getCount()) {
-						//actually split the picked up stack
-						ItemStack actualPickupStack = itemEntity.getItem().split(1);
-						//insert the stack
-						ItemStack remaining = items.insertItem(i, actualPickupStack, false);
-						//if leftover, spawn them in the world
-						if (!remaining.isEmpty()) {
-							ItemEntity item = new ItemEntity(EntityType.ITEM, level);
-							item.setItem(remaining);
-							item.setPos(this.getX() + 0.5f, this.getY() + 0.5f, this.getZ() + 0.5f);
-							item.lifespan = remaining.getEntityLifespan(level);
-							level.addFreshEntity(item);
-						}
-						cooldownTime = 8;
-						return;
+				if (this.isAlive() && !(cooldownTime > 0)) {
+					ItemStack remainingStack = itemEntity.getItem().copy();
+					for (int i = 0; i < items.getSlots() && !remainingStack.isEmpty(); i++) {
+						remainingStack = this.addItem(remainingStack, i);
 					}
+					if (remainingStack.isEmpty()) {
+						itemEntity.remove();
+					} else {
+						itemEntity.setItem(remainingStack);
+					}
+					cooldownTime = 20;
 				}
 			}
+		}
+	}
+
+	private ItemStack addItem(ItemStack originStack, int index) {
+		ItemStack destinationStack = items.getStackInSlot(index);
+		if (destinationStack.isEmpty()) {
+			items.setStackInSlot(index, originStack);
+			originStack = ItemStack.EMPTY;
+		} else if (canMergeItems(destinationStack, originStack)) {
+			int i = destinationStack.getMaxStackSize() - destinationStack.getCount();
+			int j = Math.min(originStack.getCount(), i);
+			originStack.shrink(j);
+			destinationStack.grow(j);
+		}
+		return originStack;
+	}
+
+	private boolean canMergeItems(ItemStack destination, ItemStack origin) {
+		if (destination.getItem() != origin.getItem()) {
+			return false;
+		} else if (destination.getDamageValue() != origin.getDamageValue()) {
+			return false;
+		} else if (destination.getCount() > destination.getMaxStackSize()) {
+			return false;
+		} else {
+			return ItemStack.tagMatches(destination, origin);
 		}
 	}
 
