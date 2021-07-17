@@ -1,5 +1,7 @@
 package com.nbrichau.hopshel.common.entity;
 
+import com.nbrichau.hopshel.common.tileentity.BurrowTileEntity;
+import com.nbrichau.hopshel.core.registry.HopshelBlocks;
 import com.nbrichau.hopshel.core.registry.HopshelItems;
 import net.minecraft.enchantment.EnchantmentHelper;
 import net.minecraft.entity.*;
@@ -11,9 +13,15 @@ import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
 import net.minecraft.nbt.CompoundNBT;
+import net.minecraft.nbt.NBTUtil;
+import net.minecraft.network.datasync.DataParameter;
+import net.minecraft.network.datasync.DataSerializers;
+import net.minecraft.network.datasync.EntityDataManager;
+import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.ActionResultType;
 import net.minecraft.util.EntityPredicates;
 import net.minecraft.util.Hand;
+import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.RayTraceResult;
 import net.minecraft.world.DifficultyInstance;
 import net.minecraft.world.IServerWorld;
@@ -21,18 +29,24 @@ import net.minecraft.world.World;
 import net.minecraft.world.server.ServerWorld;
 import net.minecraftforge.items.ItemStackHandler;
 
+import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.util.List;
+import java.util.Optional;
 
 // TODO: 01/03/2021 Make the entity go in the burrow
 public class HopshelEntity extends AnimalEntity {
 
 	private ItemStackHandler items = new ItemStackHandler(8);
+	private static final DataParameter<Optional<BlockPos>> BURROW_POS = EntityDataManager.defineId(HopshelEntity.class, DataSerializers.OPTIONAL_BLOCK_POS);
 	private int cooldownTime;
+	private int tickOutOfBurrow;
 
 	public HopshelEntity(EntityType<? extends AnimalEntity> type, World worldIn) {
 		super(type, worldIn);
 		this.cooldownTime = 0;
+		this.tickOutOfBurrow = 0;
+		this.setBurrowPos(null);
 		this.setCanPickUpLoot(false);
 	}
 
@@ -56,12 +70,18 @@ public class HopshelEntity extends AnimalEntity {
 	public void addAdditionalSaveData(CompoundNBT compound) {
 		super.addAdditionalSaveData(compound);
 		compound.put("Inventory", items.serializeNBT());
+		if (this.getBurrowPos().isPresent()) {
+			compound.put("BurrowPos", NBTUtil.writeBlockPos(this.getBurrowPos().get()));
+		}
 	}
 
 	@Override
 	public void readAdditionalSaveData(CompoundNBT compound) {
 		super.readAdditionalSaveData(compound);
 		items.deserializeNBT(compound.getCompound("Inventory"));
+		if (compound.contains("BurrowPos")) {
+			this.setBurrowPos(NBTUtil.readBlockPos(compound.getCompound("BurrowPos")));
+		}
 	}
 
 	@Nullable
@@ -95,18 +115,82 @@ public class HopshelEntity extends AnimalEntity {
 	@Override
 	protected void defineSynchedData() {
 		super.defineSynchedData();
+		entityData.define(BURROW_POS, Optional.empty());
 	}
 
 	@Override
 	public void aiStep() {
 		if (!this.level.isClientSide && this.isAlive()) {
 			cooldownTime--;
+			tickOutOfBurrow++;
 			if (cooldownTime < 0 && !isInventoryFull()) {
 				this.tryAbsorbItems();
+			}
+			if (!this.getBurrowPos().isPresent()) {
+				if (this.level.getGameTime() % 20 == 0 || (tickOutOfBurrow > 6000 || this.isInventoryFull())) {
+					//find burrow
+					System.out.println("searching for burrow");
+					BlockPos pos = this.findNearbyBurrow();
+					if (pos != null) {
+						this.setBurrowPos(pos);
+					}
+				}
+			} else {
+				if (this.getBurrow() == null) {
+					//burrow block have been removed, but burrow pos was not updated
+					this.setBurrowPos(null);
+				} else {
+					if (tickOutOfBurrow > 6000 || this.isInventoryFull()) {//every 5 minutes
+						tickOutOfBurrow = 0;
+//						go in burrow
+						System.out.println("going in burrow");
+//						items.setStackInSlot(0, ItemStack.EMPTY);
+//						deposit 1 stack / second
+					}
+				}
 			}
 		}
 		super.aiStep();
 	}
+
+	/*-------------------- Go In Burrow --------------------*/
+
+	public Optional<BlockPos> getBurrowPos() {
+		return this.getEntityData().get(BURROW_POS);
+	}
+
+	public void setBurrowPos(@Nullable BlockPos pos) {
+		this.getEntityData().set(BURROW_POS, Optional.ofNullable(pos));
+	}
+
+	@Nullable
+	public BurrowTileEntity getBurrow() {
+		Optional<BlockPos> pos = this.getBurrowPos();
+		if (pos.isPresent()) {
+			TileEntity tile = this.level.getBlockEntity(pos.get());
+			if (tile instanceof BurrowTileEntity) {
+				return ((BurrowTileEntity) tile);
+			}
+		}
+		return null;
+	}
+
+	@Nullable
+	public BlockPos findNearbyBurrow() {
+		BlockPos pos = this.blockPosition();
+		for (BlockPos blockPos : BlockPos.betweenClosed(pos.offset(-16, -8, -16), pos.offset(16, 8, 16))) {
+			if (this.level.getBlockState(blockPos).getBlock().equals(HopshelBlocks.HOPSHEL_BURROW.get()) && level.getBlockEntity(blockPos) instanceof BurrowTileEntity) {
+				BurrowTileEntity burrow = ((BurrowTileEntity) level.getBlockEntity(blockPos));
+				if (!burrow.isFull() && this.getBurrow() == null) {
+					System.out.println("found burrow at " + blockPos);
+					return blockPos;
+				}
+			}
+		}
+		return null;
+	}
+
+	/*-------------------- Pick Up Items --------------------*/
 
 	@Override
 	protected void dropEquipment() {

@@ -23,8 +23,8 @@
 
 # Inventory
 -[ ] item can't be accessed from the hopshel
--[ ] inventory have 8 slots
--[ ] killing hopshel drop all stored items
+-[x] inventory have 8 slots
+-[x] killing hopshel drop all stored items
 
 
 # Helmet
