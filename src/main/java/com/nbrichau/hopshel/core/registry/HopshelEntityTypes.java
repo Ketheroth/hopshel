@@ -15,7 +15,7 @@ public class HopshelEntityTypes {
 	public static final DeferredRegister<EntityType<?>> ENTITY_TYPES = DeferredRegister.create(ForgeRegistries.ENTITIES, HopshelMod.MODID);
 
 	public static final RegistryObject<EntityType<HopshelEntity>> HOPSHEL = ENTITY_TYPES
-			.register("hopshel", () -> EntityType.Builder.of(HopshelEntity::new, EntityClassification.CREATURE)
+			.register("hopshel", () -> EntityType.Builder.of(HopshelEntity::new, EntityClassification.AMBIENT)
 					.sized(0.5F, 0.5F)
 					.build(new ResourceLocation(HopshelMod.MODID, "hopshel").toString()));
 

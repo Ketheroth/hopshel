@@ -92,7 +92,7 @@ public class HopshelBurrowFeature extends Feature<NoFeatureConfig> {
 				this.tryPlaceBlockUp(reader, posBurrow.offset(-3, 0, 2), endstone_gravel);
 				this.tryPlaceBlockUp(reader, posBurrow.offset(-2, 0, 3), endstone_gravel);
 			}
-			this.spawnHopshel(reader, posBurrow, rand);
+//			this.spawnHopshel(reader, posBurrow, rand);
 			return true;
 		}
 		return false;
@@ -105,7 +105,7 @@ public class HopshelBurrowFeature extends Feature<NoFeatureConfig> {
 			if (hopshel != null) {
 				hopshel.moveTo(offset.getX() + 0.5F, offset.getY() + 0.1F, offset.getZ() + 0.5F, 0.0F, 0.0F);
 				hopshel.finalizeSpawn(world, world.getCurrentDifficultyAt(offset), SpawnReason.STRUCTURE, null, null);
-				hopshel.setBurrowPos(pos);
+//				hopshel.setBurrowPos(pos);
 				world.addFreshEntity(hopshel);
 			}
 		}

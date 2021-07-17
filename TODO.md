@@ -15,6 +15,7 @@
 -[ ] when tamed, they follow like a dog and can be sat down
 
 # Vacuum
+-[x] suck item in 2.5 block radius
 -[ ] suck item in 5 block radius
 -[ ] suck item by levitating it and moving it near itself
 -[ ] when sucking up chorus fruit, will eat it instead of storing it

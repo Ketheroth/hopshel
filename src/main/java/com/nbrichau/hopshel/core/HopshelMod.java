@@ -6,6 +6,7 @@ import net.minecraft.item.ItemGroup;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
 import net.minecraftforge.common.MinecraftForge;
+import net.minecraftforge.eventbus.api.EventPriority;
 import net.minecraftforge.eventbus.api.IEventBus;
 import net.minecraftforge.fml.client.registry.RenderingRegistry;
 import net.minecraftforge.fml.common.Mod;
@@ -26,19 +27,21 @@ public class HopshelMod {
 
 		modEventBus.addListener(this::setup);
 		modEventBus.addListener(this::clientSetup);
-		modEventBus.addListener(HopshelFeatures::onBiomeLoading);
+//		modEventBus.addListener(HopshelFeatures::onBiomeLoading);
 		modEventBus.addListener(HopshelEntityTypes::registerAttributes);
 
 		HopshelItems.ITEMS.register(modEventBus);
 		HopshelBlocks.BLOCKS.register(modEventBus);
 		HopshelEntityTypes.ENTITY_TYPES.register(modEventBus);
 		HopshelTileEntities.TILES.register(modEventBus);
+		HopshelFeatures.FEATURES.register(modEventBus);
 
+		MinecraftForge.EVENT_BUS.addListener(HopshelFeatures::onBiomeLoading);//EventPriority.HIGH,
 		MinecraftForge.EVENT_BUS.register(this);
 	}
 
 	private void setup(final FMLCommonSetupEvent event) {
-		event.enqueueWork(HopshelFeatures.Configured::registerConfiguredFeatures);
+		event.enqueueWork(HopshelConfiguredFeatures::registerConfiguredFeatures);
 	}
 
 	private void clientSetup(final FMLClientSetupEvent event) {
