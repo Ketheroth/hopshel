@@ -4,6 +4,7 @@ import com.nbrichau.hopshel.common.tileentity.BurrowTileEntity;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
 import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.item.Items;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.ActionResultType;
 import net.minecraft.util.Hand;
@@ -32,8 +33,12 @@ public class HopshelBurrow extends Block {
 		if (worldIn.isClientSide()) {
 			return ActionResultType.SUCCESS;
 		}
-		if (!(worldIn.getBlockEntity(pos) instanceof BurrowTileEntity)) {
+		TileEntity tile = worldIn.getBlockEntity(pos);
+		if (!(tile instanceof BurrowTileEntity)) {
 			return ActionResultType.FAIL;
+		}
+		if (player.getItemInHand(handIn).getItem().equals(Items.STICK)) {
+			System.out.println("occupant amount : " + ((BurrowTileEntity) tile).occupantAmount());
 		}
 		return ActionResultType.SUCCESS;
 	}

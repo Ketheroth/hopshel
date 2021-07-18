@@ -8,21 +8,20 @@
 -[ ] Burrow have initial capacity of 2 entities and max is 2
 
 # Hopshel
--[ ] 15 Hearts
+-[x] 18 Hearts
 -[ ] Hopshel tamable : 20% with chorus fruit
 -[ ] when fed chorus : teleport randomly five block radius
 -[ ] if tamed, when fed chorus : doesn't teleport, their plate flash white
 -[ ] when tamed, they follow like a dog and can be sat down
 
 # Vacuum
--[x] suck item in 2.5 block radius
--[ ] suck item in 5 block radius
+-[x] suck item in 5 block radius
 -[ ] suck item by levitating it and moving it near itself
 -[ ] when sucking up chorus fruit, will eat it instead of storing it
 -[ ] plates flash white upon getting an item
 
 # Inventory
--[ ] item can't be accessed from the hopshel
+-[x] item can't be directly accessed from the hopshel
 -[x] inventory have 8 slots
 -[x] killing hopshel drop all stored items
 
@@ -40,4 +39,5 @@
 -[ ] love to hop around and move nimbly
 -[ ] follow the player but is distracted by chorus flower. They move toward it only if they can get to it.
 -[ ] walk on walls and ceilings
--[ ] deposit its items on his burrow and/or shulker boxes
+-[x] deposit its items in his burrow
+-[ ] deposit its items in shulker boxes if can't find a burrow
