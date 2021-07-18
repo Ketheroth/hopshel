@@ -13,6 +13,7 @@ import net.minecraft.util.math.BlockRayTraceResult;
 import net.minecraft.world.IBlockReader;
 import net.minecraft.world.World;
 
+// TODO: 18/07/2021 eject entities inside when broken
 public class HopshelBurrow extends Block {
 	public HopshelBurrow(Properties properties) {
 		super(properties);
@@ -31,15 +32,16 @@ public class HopshelBurrow extends Block {
 	@Override
 	public ActionResultType use(BlockState state, World worldIn, BlockPos pos, PlayerEntity player, Hand handIn, BlockRayTraceResult hit) {
 		if (worldIn.isClientSide()) {
-			return ActionResultType.SUCCESS;
+			return super.use(state, worldIn, pos, player, handIn, hit);
 		}
 		TileEntity tile = worldIn.getBlockEntity(pos);
 		if (!(tile instanceof BurrowTileEntity)) {
 			return ActionResultType.FAIL;
 		}
-		if (player.getItemInHand(handIn).getItem().equals(Items.STICK)) {
+		if (player.getItemInHand(handIn).getItem().equals(Items.DEBUG_STICK)) {
 			System.out.println("occupant amount : " + ((BurrowTileEntity) tile).occupantAmount());
+			return ActionResultType.SUCCESS;
 		}
-		return ActionResultType.SUCCESS;
+		return super.use(state, worldIn, pos, player, handIn, hit);
 	}
 }

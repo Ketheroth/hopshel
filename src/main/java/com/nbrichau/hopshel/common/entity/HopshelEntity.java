@@ -9,8 +9,9 @@ import net.minecraft.entity.*;
 import net.minecraft.entity.ai.attributes.AttributeModifierMap;
 import net.minecraft.entity.ai.attributes.Attributes;
 import net.minecraft.entity.item.ItemEntity;
-import net.minecraft.entity.passive.AnimalEntity;
+import net.minecraft.entity.passive.TameableEntity;
 import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
 import net.minecraft.nbt.CompoundNBT;
@@ -28,6 +29,7 @@ import net.minecraft.world.DifficultyInstance;
 import net.minecraft.world.IServerWorld;
 import net.minecraft.world.World;
 import net.minecraft.world.server.ServerWorld;
+import net.minecraftforge.event.ForgeEventFactory;
 import net.minecraftforge.items.ItemStackHandler;
 
 import javax.annotation.Nullable;
@@ -35,17 +37,16 @@ import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.List;
 import java.util.Optional;
 
-// TODO: 01/03/2021 Make the entity go in the burrow
 @MethodsReturnNonnullByDefault
 @ParametersAreNonnullByDefault
-public class HopshelEntity extends AnimalEntity {
+public class HopshelEntity extends TameableEntity {
 
 	private static final DataParameter<Optional<BlockPos>> BURROW_POS = EntityDataManager.defineId(HopshelEntity.class, DataSerializers.OPTIONAL_BLOCK_POS);
 	private ItemStackHandler items = new ItemStackHandler(8);
 	private int cooldownTime;
 	private int tickOutOfBurrow;
 
-	public HopshelEntity(EntityType<? extends AnimalEntity> type, World worldIn) {
+	public HopshelEntity(EntityType<? extends TameableEntity> type, World worldIn) {
 		super(type, worldIn);
 		this.cooldownTime = 20;
 		this.tickOutOfBurrow = 0;
@@ -99,15 +100,40 @@ public class HopshelEntity extends AnimalEntity {
 	}
 
 	@Override
-	public ActionResultType mobInteract(PlayerEntity playerEntity, Hand handIn) {//onRightCLick
-		if (!this.level.isClientSide) {
-			if (playerEntity.getItemInHand(handIn).getItem().equals(Items.STICK)) {
-				for (int i = 0; i < items.getSlots(); i++) {
-					System.out.println("Item " + i + " : " + items.getStackInSlot(i));
+	public ActionResultType mobInteract(PlayerEntity player, Hand handIn) {//onRightCLick
+		ItemStack heldStack = player.getItemInHand(handIn);
+		Item heldItem = heldStack.getItem();
+		if (level.isClientSide) {
+			boolean flag = this.isOwnedBy(player) || this.isTame() || (!this.isTame() && heldItem.equals(Items.CHORUS_FRUIT));
+			return flag ? ActionResultType.CONSUME : ActionResultType.PASS;
+		}
+		if (heldItem.equals(Items.DEBUG_STICK)) {
+			for (int i = 0; i < items.getSlots(); i++) {
+				System.out.println("Item " + i + " : " + items.getStackInSlot(i));
+			}
+			System.out.println("is Tamed " + isTame());
+			return ActionResultType.SUCCESS;
+		} else if (heldItem.equals(Items.CHORUS_FRUIT)) {
+			if (this.isTame()) {
+				if (this.isFood(heldStack) && this.getHealth() < this.getMaxHealth()) {
+					if (!player.abilities.instabuild) {
+						heldStack.shrink(1);
+					}
+					this.heal((float)heldItem.getFoodProperties().getNutrition());
+					return ActionResultType.SUCCESS;
 				}
+			} else {
+				if (!player.abilities.instabuild) {
+					heldStack.shrink(1);
+				}
+				if (this.random.nextInt(4) <= 1 && !ForgeEventFactory.onAnimalTame(this, player)) {
+					this.tame(player);
+					this.navigation.stop();
+				}
+				return ActionResultType.SUCCESS;
 			}
 		}
-		return super.mobInteract(playerEntity, handIn);
+		return super.mobInteract(player, handIn);
 	}
 
 	@Override
