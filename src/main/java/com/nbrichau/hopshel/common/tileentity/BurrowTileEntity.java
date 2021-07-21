@@ -6,6 +6,8 @@ import mcp.MethodsReturnNonnullByDefault;
 import net.minecraft.block.BlockState;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityType;
+import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.inventory.IInventory;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.nbt.ListNBT;
@@ -23,17 +25,21 @@ import java.util.List;
 
 @MethodsReturnNonnullByDefault
 @ParametersAreNonnullByDefault
-public class BurrowTileEntity extends TileEntity implements ITickableTileEntity {
+public class BurrowTileEntity extends TileEntity implements ITickableTileEntity, IInventory {
 
 	private final List<BurrowOccupant> burrowOccupants = new ArrayList<>();
+	private ItemStackHandler items = new ItemStackHandler(9);
+	private int transferCooldown;
 
 	public BurrowTileEntity() {
 		super(HopshelTileEntities.HOPSHEL_BURROW.get());
+		this.transferCooldown = 20;
 	}
 
 	@Override
 	public void load(BlockState state, CompoundNBT nbt) {
 		super.load(state, nbt);
+		items.deserializeNBT(nbt.getCompound("Inventory"));
 		this.burrowOccupants.clear();
 		ListNBT listnbt = nbt.getList("burrowOccupants", 10);
 		for (int i = 0; i < listnbt.size(); ++i) {
@@ -46,26 +52,39 @@ public class BurrowTileEntity extends TileEntity implements ITickableTileEntity 
 	@Override
 	public CompoundNBT save(CompoundNBT compound) {
 		compound.put("burrowOccupants", this.getBurrowOccupants());
+		compound.put("Inventory", items.serializeNBT());
 		return super.save(compound);
 	}
 
 	@Override
 	public void tick() {
 		if (level != null && !level.isClientSide()) {
+			transferCooldown--;
+			if (transferCooldown <= 0) {
+				//transfer to
+			}
 			Iterator<BurrowOccupant> occupants = this.burrowOccupants.iterator();
 			while (occupants.hasNext()) {
 				BurrowOccupant occupant = occupants.next();
-				occupant.tick();
+				if (occupant.tick(this.items)) {
+					this.setChanged();
+				}
 				if (occupant.isInventoryEmpty()) {
 					if (this.trySpawnHopshel(occupant)) {
 						System.out.println("removing occupant");
 						occupants.remove();
+						this.setChanged();
 					}
 				}
 			}
 		}
 	}
 
+	public ItemStackHandler getInventory() {
+		return this.items;
+	}
+
+	/*-------------------- Hopshel in burrow --------------------*/
 
 	private ListNBT getBurrowOccupants() {
 		ListNBT listnbt = new ListNBT();
@@ -73,7 +92,7 @@ public class BurrowTileEntity extends TileEntity implements ITickableTileEntity 
 //			occupant.occupant.remove("UUID");
 			CompoundNBT compoundnbt = new CompoundNBT();
 			compoundnbt.put("EntityData", occupant.entityData);
-			compoundnbt.putInt("TicksInBurrow", occupant.ticksInBurrow);
+			compoundnbt.putInt("TicksInBurrow", occupant.transferCooldown);
 			listnbt.add(compoundnbt);
 		}
 		return listnbt;
@@ -92,6 +111,7 @@ public class BurrowTileEntity extends TileEntity implements ITickableTileEntity 
 				level.playSound(null, blockpos.getX(), blockpos.getY(), blockpos.getZ(), SoundEvents.BEEHIVE_ENTER, SoundCategory.BLOCKS, 1.0F, 1.0F);
 			}
 			entity.remove(true);
+			this.setChanged();
 		}
 	}
 
@@ -119,36 +139,106 @@ public class BurrowTileEntity extends TileEntity implements ITickableTileEntity 
 	public boolean isFull() {
 		return burrowOccupants.size() >= 2;
 	}
+
 	public int occupantAmount() {
 		return burrowOccupants.size();
 	}
 
+	/*-------------------- IInventory --------------------*/
+
+	@Override
+	public int getContainerSize() {
+		return items.getSlots();
+	}
+
+	@Override
+	public boolean isEmpty() {
+		for (int i = 0; i < items.getSlots(); i++) {
+			if (!items.getStackInSlot(i).isEmpty()) {
+				return false;
+			}
+		}
+		return true;
+	}
+
+	@Override
+	public ItemStack getItem(int index) {
+		return items.getStackInSlot(index);
+	}
+
+	@Override
+	public ItemStack removeItem(int index, int amount) {
+		ItemStack itemStack = items.extractItem(index, amount, false);
+		if (!itemStack.isEmpty()) {
+			this.setChanged();
+		}
+		return itemStack;
+	}
+
+	@Override
+	public ItemStack removeItemNoUpdate(int index) {
+		ItemStack itemStack = items.getStackInSlot(index);
+		if (itemStack.isEmpty()) {
+			return ItemStack.EMPTY;
+		}
+		this.items.setStackInSlot(index, ItemStack.EMPTY);
+		return itemStack;
+	}
+
+	@Override
+	public void setItem(int index, ItemStack stack) {
+		items.setStackInSlot(index, stack);
+	}
+
+	@Override
+	public boolean stillValid(PlayerEntity player) {
+		return false;
+	}
+
+	@Override
+	public void clearContent() {
+		for (int i = 0; i < items.getSlots(); i++) {
+			items.setStackInSlot(i, ItemStack.EMPTY);
+		}
+	}
+
 	static class BurrowOccupant {
 
-		private final static int ONE_SECOND = 20;
 		private final CompoundNBT entityData;
-		private int ticksInBurrow;
+		private int transferCooldown;
 
 		private BurrowOccupant(CompoundNBT entityData, int initialTicks) {
 			this.entityData = entityData;
-			this.ticksInBurrow = initialTicks;
+			this.transferCooldown = initialTicks;
 		}
 
-		private void tick() {
-			ticksInBurrow++;
-			if (ticksInBurrow >= ONE_SECOND) {
-				ticksInBurrow = 0;
-				ItemStackHandler items = this.getInventory();
-				for (int i = 0; i < items.getSlots(); i++) {
-					if (!items.getStackInSlot(i).isEmpty()) {
-						System.out.println("removing stack " + i + " " + items.getStackInSlot(i));
-						items.setStackInSlot(i, ItemStack.EMPTY);
-						// TODO: 18/07/2021 put the stack in the burrow instead of removing it
-						this.entityData.put("Inventory", items.serializeNBT());
-						return;
+		/**
+		 * apply a tick to the burrow occupant
+		 *
+		 * @param burrowInventory the inventory of the burrow
+		 * @return true if the burrow inventory have changed
+		 */
+		private boolean tick(ItemStackHandler burrowInventory) {
+			transferCooldown--;
+			if (transferCooldown <= 0) {
+				ItemStackHandler hopshelInventory = this.getInventory();
+				for (int hopshelSlot = 0; hopshelSlot < hopshelInventory.getSlots(); hopshelSlot++) {
+					if (!hopshelInventory.getStackInSlot(hopshelSlot).isEmpty()) {
+						System.out.println("transferring stack " + hopshelSlot + " " + hopshelInventory.getStackInSlot(hopshelSlot));
+						ItemStack remainingStack = hopshelInventory.getStackInSlot(hopshelSlot).copy();
+						for (int burrowSlot = 0; burrowSlot < burrowInventory.getSlots() && !remainingStack.isEmpty(); burrowSlot++) {
+							remainingStack = burrowInventory.insertItem(burrowSlot, remainingStack, false);
+						}
+						if (remainingStack.getCount() != hopshelInventory.getStackInSlot(hopshelSlot).getCount()) {
+							hopshelInventory.setStackInSlot(hopshelSlot, ItemStack.EMPTY);
+							this.entityData.put("Inventory", hopshelInventory.serializeNBT());
+							transferCooldown = 20;
+							return true;
+						}
 					}
 				}
 			}
+			return false;
 		}
 
 		private ItemStackHandler getInventory() {

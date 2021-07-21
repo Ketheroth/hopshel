@@ -254,7 +254,7 @@ public class HopshelEntity extends TameableEntity {
 				if (this.isAlive() && cooldownTime <= 0) {
 					ItemStack remainingStack = itemEntity.getItem().copy();
 					for (int i = 0; i < items.getSlots() && !remainingStack.isEmpty(); i++) {
-						remainingStack = this.addItem(remainingStack, i);
+						remainingStack = items.insertItem(i, remainingStack, false);
 					}
 					if (remainingStack.isEmpty()) {
 						itemEntity.remove();
@@ -267,30 +267,5 @@ public class HopshelEntity extends TameableEntity {
 		}
 	}
 
-	private ItemStack addItem(ItemStack originStack, int index) {
-		ItemStack destinationStack = items.getStackInSlot(index);
-		if (destinationStack.isEmpty()) {
-			items.setStackInSlot(index, originStack);
-			originStack = ItemStack.EMPTY;
-		} else if (canMergeItems(destinationStack, originStack)) {
-			int i = destinationStack.getMaxStackSize() - destinationStack.getCount();
-			int j = Math.min(originStack.getCount(), i);
-			originStack.shrink(j);
-			destinationStack.grow(j);
-		}
-		return originStack;
-	}
-
-	private boolean canMergeItems(ItemStack destination, ItemStack origin) {
-		if (destination.getItem() != origin.getItem()) {
-			return false;
-		} else if (destination.getDamageValue() != origin.getDamageValue()) {
-			return false;
-		} else if (destination.getCount() > destination.getMaxStackSize()) {
-			return false;
-		} else {
-			return ItemStack.tagMatches(destination, origin);
-		}
-	}
 
 }

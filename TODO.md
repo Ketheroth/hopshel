@@ -6,6 +6,7 @@
 -[ ] Hopshel plates design are random
 
 -[ ] Burrow have initial capacity of 2 entities and max is 2
+-[ ] burrow can be created by a hopshel if can't find a burrow, search for end gravel and create a burrow there.
 
 # Hopshel
 -[x] 18 Hearts
@@ -24,7 +25,6 @@
 -[x] item can't be directly accessed from the hopshel
 -[x] inventory have 8 slots
 -[x] killing hopshel drop all stored items
-
 
 # Helmet
 -[ ] can place a helmet in their helmet slot
