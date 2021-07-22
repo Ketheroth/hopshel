@@ -10,9 +10,10 @@
 
 # Hopshel
 -[x] 18 Hearts
--[ ] Hopshel tamable : 20% with chorus fruit
--[ ] when fed chorus : teleport randomly five block radius
--[ ] if tamed, when fed chorus : doesn't teleport, their plate flash white
+-[x] Hopshel tamable : 20% with chorus fruit
+-[x] when fed chorus : teleport randomly five block radius
+-[x] if tamed, when fed chorus : doesn't teleport
+	-[ ] plates flash white when tamed
 -[ ] when tamed, they follow like a dog and can be sat down
 
 # Vacuum

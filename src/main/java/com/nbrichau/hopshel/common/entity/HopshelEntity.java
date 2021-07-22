@@ -9,6 +9,7 @@ import net.minecraft.entity.*;
 import net.minecraft.entity.ai.attributes.AttributeModifierMap;
 import net.minecraft.entity.ai.attributes.Attributes;
 import net.minecraft.entity.item.ItemEntity;
+import net.minecraft.entity.passive.FoxEntity;
 import net.minecraft.entity.passive.TameableEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.Item;
@@ -20,16 +21,16 @@ import net.minecraft.network.datasync.DataParameter;
 import net.minecraft.network.datasync.DataSerializers;
 import net.minecraft.network.datasync.EntityDataManager;
 import net.minecraft.tileentity.TileEntity;
-import net.minecraft.util.ActionResultType;
-import net.minecraft.util.EntityPredicates;
-import net.minecraft.util.Hand;
+import net.minecraft.util.*;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.RayTraceResult;
 import net.minecraft.world.DifficultyInstance;
 import net.minecraft.world.IServerWorld;
 import net.minecraft.world.World;
 import net.minecraft.world.server.ServerWorld;
 import net.minecraftforge.event.ForgeEventFactory;
+import net.minecraftforge.event.entity.living.EntityTeleportEvent;
 import net.minecraftforge.items.ItemStackHandler;
 
 import javax.annotation.Nullable;
@@ -95,6 +96,16 @@ public class HopshelEntity extends TameableEntity {
 	}
 
 	@Override
+	public boolean isFood(ItemStack stack) {
+		return stack.getItem().equals(Items.CHORUS_FRUIT);
+	}
+
+	@Override
+	public boolean canFallInLove() {
+		return false;
+	}
+
+	@Override
 	protected void registerGoals() {
 		super.registerGoals();
 	}
@@ -104,7 +115,7 @@ public class HopshelEntity extends TameableEntity {
 		ItemStack heldStack = player.getItemInHand(handIn);
 		Item heldItem = heldStack.getItem();
 		if (level.isClientSide) {
-			boolean flag = this.isOwnedBy(player) || this.isTame() || (!this.isTame() && heldItem.equals(Items.CHORUS_FRUIT));
+			boolean flag = this.isOwnedBy(player) || this.isTame() || heldItem.equals(Items.CHORUS_FRUIT);
 			return flag ? ActionResultType.CONSUME : ActionResultType.PASS;
 		}
 		if (heldItem.equals(Items.DEBUG_STICK)) {
@@ -119,16 +130,28 @@ public class HopshelEntity extends TameableEntity {
 					if (!player.abilities.instabuild) {
 						heldStack.shrink(1);
 					}
-					this.heal((float)heldItem.getFoodProperties().getNutrition());
+					//eat the chorus fruit if possible
+					this.heal((float) heldItem.getFoodProperties().getNutrition());
+					//get teleported by the chorus fruit
+					heldStack.finishUsingItem(level, this);
 					return ActionResultType.SUCCESS;
 				}
+				System.out.println("out of if");
 			} else {
 				if (!player.abilities.instabuild) {
 					heldStack.shrink(1);
 				}
+				//try to tame the hopshel
 				if (this.random.nextInt(4) <= 1 && !ForgeEventFactory.onAnimalTame(this, player)) {
 					this.tame(player);
 					this.navigation.stop();
+					//spawn tame success particle
+					this.level.broadcastEntityEvent(this, (byte) 7);
+				} else {
+					//get teleported by the chorus fruit
+					heldStack.finishUsingItem(level, this);
+					//spawn tame fail particle
+					this.level.broadcastEntityEvent(this, (byte) 6);
 				}
 				return ActionResultType.SUCCESS;
 			}
@@ -183,6 +206,32 @@ public class HopshelEntity extends TameableEntity {
 	public void resetCountdowns() {
 		this.tickOutOfBurrow = 0;
 		this.cooldownTime = 20;
+	}
+
+	private void chorusTeleport() {
+		if (!this.level.isClientSide) {
+
+			for(int i = 0; i < 16; ++i) {
+				double posX = this.getX() + (this.getRandom().nextDouble() - 0.5D) * 10.0D;
+				double posY = MathHelper.clamp(this.getY() + (this.getRandom().nextInt(10) - 5.0D), 0.0D, this.level.getHeight() - 1.0D);
+				double posZ = this.getZ() + (this.getRandom().nextDouble() - 0.5D) * 10.0D;
+				if (this.isPassenger()) {
+					this.stopRiding();
+				}
+
+				EntityTeleportEvent.ChorusFruit event = ForgeEventFactory.onChorusFruitTeleport(this, posX, posY, posZ);
+				if (ForgeEventFactory.onChorusFruitTeleport(this, posX, posY, posZ).isCanceled()) {
+					return;
+				}
+				if (this.randomTeleport(event.getTargetX(), event.getTargetY(), event.getTargetZ(), true)) {
+					SoundEvent soundevent = SoundEvents.CHORUS_FRUIT_TELEPORT;
+					this.level.playSound(null, this.getX(), this.getY(), this.getZ(), soundevent, SoundCategory.PLAYERS, 1.0F, 1.0F);
+					this.playSound(soundevent, 1.0F, 1.0F);
+					break;
+				}
+			}
+
+		}
 	}
 
 	/*-------------------- Go In Burrow --------------------*/
@@ -266,6 +315,5 @@ public class HopshelEntity extends TameableEntity {
 			}
 		}
 	}
-
 
 }

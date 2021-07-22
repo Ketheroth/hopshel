@@ -5,6 +5,7 @@ import com.nbrichau.hopshel.core.registry.*;
 import net.minecraft.item.ItemGroup;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
+import net.minecraftforge.client.event.ColorHandlerEvent;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.eventbus.api.EventPriority;
 import net.minecraftforge.eventbus.api.IEventBus;
@@ -29,6 +30,7 @@ public class HopshelMod {
 		modEventBus.addListener(this::clientSetup);
 //		modEventBus.addListener(HopshelFeatures::onBiomeLoading);
 		modEventBus.addListener(HopshelEntityTypes::registerAttributes);
+		modEventBus.addListener(this::onItemColor);
 
 		HopshelItems.ITEMS.register(modEventBus);
 		HopshelBlocks.BLOCKS.register(modEventBus);
@@ -46,6 +48,10 @@ public class HopshelMod {
 
 	private void clientSetup(final FMLClientSetupEvent event) {
 		RenderingRegistry.registerEntityRenderingHandler(HopshelEntityTypes.HOPSHEL.get(), HopshelRenderer::new);
+	}
+
+	private void onItemColor(ColorHandlerEvent.Item event) {
+		event.getItemColors().register((stack, i) -> 0x8963A7, HopshelItems.HOPSHEL_SPAWN_EGG.get());
 	}
 
 	public static class HopshelGroup extends ItemGroup {

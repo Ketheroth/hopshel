@@ -78,7 +78,26 @@ minecraft {
 }
 
 dependencies {
-	minecraft 'net.minecraftforge:forge:1.16.5-36.1.33'
+	minecraft 'net.minecraftforge:forge:1.16.5-36.2.0'
+//	"mcjty.theoneprobe:TheOneProbe-1.16:1.16-3.1.4-22"
+	compileOnly fg.deobf("curse.maven:theoneprobe-245211:3319255")
+	runtimeOnly fg.deobf("curse.maven:theoneprobe-245211:3319255")
+}
+
+repositories {
+//	maven { // TOP
+//		name 'tterrag maven'
+//		url "http://maven.tterrag.com/"
+//	}
+	repositories {
+		maven {
+			url "https://www.cursemaven.com"
+			content {
+				includeGroup "curse.maven"
+			}
+		}
+	}
+
 }
 
 jar {
