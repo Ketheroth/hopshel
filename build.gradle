@@ -5,7 +5,7 @@ buildscript {
 		mavenCentral()
 	}
 	dependencies {
-		classpath group: 'me.sizableshrimp.parchmenttest', name: 'ForgeGradle', version: '4.+', changing: true
+		classpath group: 'me.sizableshrimp.parchmenttest', name: 'ForgeGradle', version: '5.1.+', changing: true
 	}
 }
 apply plugin: 'net.minecraftforge.gradle'
@@ -13,15 +13,17 @@ apply plugin: 'net.minecraftforge.gradle'
 apply plugin: 'eclipse'
 apply plugin: 'maven-publish'
 
-version = '1.16.5-0.0.1.0'
-group = 'com.nbrichau.hopshel'
-archivesBaseName = 'hopshel'
+version = mcversion + '-' + modversion
+group = 'com.ketheroth.hopshel'
+archivesBaseName = 'Hopshel'
 
 java.toolchain.languageVersion = JavaLanguageVersion.of(8) // Mojang ships Java 8 to end users, so your mod should target Java 8.
 
 println('Java: ' + System.getProperty('java.version') + ' JVM: ' + System.getProperty('java.vm.version') + '(' + System.getProperty('java.vendor') + ') Arch: ' + System.getProperty('os.arch'))
 minecraft {
-	mappings channel: 'parchment', version: '2021.06.27-nightly-SNAPSHOT-1.16.5'
+	mappings channel: mappingschannel, version: mappingsversion + '-' + mcversion
+
+	// accessTransformer = file('src/main/resources/META-INF/accesstransformer.cfg')
 
 	runs {
 		client {
@@ -78,7 +80,7 @@ minecraft {
 }
 
 dependencies {
-	minecraft 'net.minecraftforge:forge:1.16.5-36.2.0'
+	minecraft 'net.minecraftforge:forge:' + mcversion + '-' + forgeversion
 //	"mcjty.theoneprobe:TheOneProbe-1.16:1.16-3.1.4-22"
 	compileOnly fg.deobf("curse.maven:theoneprobe-245211:3319255")
 	runtimeOnly fg.deobf("curse.maven:theoneprobe-245211:3319255")
@@ -103,12 +105,12 @@ repositories {
 jar {
 	manifest {
 		attributes([
-				"Specification-Title": "hopshel",
-				"Specification-Vendor": "nbrichau",
+				"Specification-Title": "Hopshel",
+				"Specification-Vendor": "Ketheroth",
 				"Specification-Version": "1",
 				"Implementation-Title": project.name,
 				"Implementation-Version": "${version}",
-				"Implementation-Vendor" :"nbrichau",
+				"Implementation-Vendor" :"Ketheroth",
 				"Implementation-Timestamp": new Date().format("yyyy-MM-dd'T'HH:mm:ssZ")
 		])
 	}

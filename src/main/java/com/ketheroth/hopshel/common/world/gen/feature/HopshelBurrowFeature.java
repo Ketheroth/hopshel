@@ -1,10 +1,10 @@
-package com.nbrichau.hopshel.common.world.gen.feature;
+package com.ketheroth.hopshel.common.world.gen.feature;
 
 import com.mojang.serialization.Codec;
-import com.nbrichau.hopshel.core.HopshelMod;
-import com.nbrichau.hopshel.core.registry.HopshelBlocks;
-import com.nbrichau.hopshel.common.entity.HopshelEntity;
-import com.nbrichau.hopshel.core.registry.HopshelEntityTypes;
+import com.ketheroth.hopshel.core.HopshelMod;
+import com.ketheroth.hopshel.core.registry.HopshelBlocks;
+import com.ketheroth.hopshel.common.entity.HopshelEntity;
+import com.ketheroth.hopshel.core.registry.HopshelEntityTypes;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
 import net.minecraft.entity.SpawnReason;

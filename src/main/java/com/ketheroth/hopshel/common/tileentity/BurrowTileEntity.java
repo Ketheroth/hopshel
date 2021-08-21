@@ -1,7 +1,7 @@
-package com.nbrichau.hopshel.common.tileentity;
+package com.ketheroth.hopshel.common.tileentity;
 
-import com.nbrichau.hopshel.common.entity.HopshelEntity;
-import com.nbrichau.hopshel.core.registry.HopshelTileEntities;
+import com.ketheroth.hopshel.common.entity.HopshelEntity;
+import com.ketheroth.hopshel.core.registry.HopshelTileEntities;
 import mcp.MethodsReturnNonnullByDefault;
 import net.minecraft.block.BlockState;
 import net.minecraft.entity.Entity;

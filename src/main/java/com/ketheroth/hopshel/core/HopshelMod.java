@@ -1,13 +1,12 @@
-package com.nbrichau.hopshel.core;
+package com.ketheroth.hopshel.core;
 
-import com.nbrichau.hopshel.client.renderer.entity.HopshelRenderer;
-import com.nbrichau.hopshel.core.registry.*;
+import com.ketheroth.hopshel.client.renderer.entity.HopshelRenderer;
+import com.ketheroth.hopshel.core.registry.*;
 import net.minecraft.item.ItemGroup;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
 import net.minecraftforge.client.event.ColorHandlerEvent;
 import net.minecraftforge.common.MinecraftForge;
-import net.minecraftforge.eventbus.api.EventPriority;
 import net.minecraftforge.eventbus.api.IEventBus;
 import net.minecraftforge.fml.client.registry.RenderingRegistry;
 import net.minecraftforge.fml.common.Mod;

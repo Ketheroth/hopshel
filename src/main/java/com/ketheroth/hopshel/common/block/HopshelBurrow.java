@@ -1,6 +1,6 @@
-package com.nbrichau.hopshel.common.block;
+package com.ketheroth.hopshel.common.block;
 
-import com.nbrichau.hopshel.common.tileentity.BurrowTileEntity;
+import com.ketheroth.hopshel.common.tileentity.BurrowTileEntity;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
 import net.minecraft.entity.EntityType;

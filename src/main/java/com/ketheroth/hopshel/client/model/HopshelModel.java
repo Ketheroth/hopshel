@@ -1,8 +1,8 @@
-package com.nbrichau.hopshel.client.model;
+package com.ketheroth.hopshel.client.model;
 
 import com.mojang.blaze3d.matrix.MatrixStack;
 import com.mojang.blaze3d.vertex.IVertexBuilder;
-import com.nbrichau.hopshel.common.entity.HopshelEntity;
+import com.ketheroth.hopshel.common.entity.HopshelEntity;
 import net.minecraft.client.renderer.entity.model.EntityModel;
 import net.minecraft.client.renderer.model.ModelRenderer;
 

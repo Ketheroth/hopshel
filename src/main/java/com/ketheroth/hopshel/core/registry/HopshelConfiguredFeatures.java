@@ -1,4 +1,4 @@
-package com.nbrichau.hopshel.core.registry;
+package com.ketheroth.hopshel.core.registry;
 
 import net.minecraft.util.registry.Registry;
 import net.minecraft.util.registry.WorldGenRegistries;

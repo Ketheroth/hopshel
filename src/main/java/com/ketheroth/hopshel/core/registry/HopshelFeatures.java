@@ -1,7 +1,7 @@
-package com.nbrichau.hopshel.core.registry;
+package com.ketheroth.hopshel.core.registry;
 
-import com.nbrichau.hopshel.common.world.gen.feature.HopshelBurrowFeature;
-import com.nbrichau.hopshel.core.HopshelMod;
+import com.ketheroth.hopshel.common.world.gen.feature.HopshelBurrowFeature;
+import com.ketheroth.hopshel.core.HopshelMod;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.world.biome.Biomes;
 import net.minecraft.world.gen.GenerationStage;

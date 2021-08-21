@@ -1,7 +1,7 @@
-package com.nbrichau.hopshel.core.registry;
+package com.ketheroth.hopshel.core.registry;
 
-import com.nbrichau.hopshel.common.item.HopshelSpawnEgg;
-import com.nbrichau.hopshel.core.HopshelMod;
+import com.ketheroth.hopshel.common.item.HopshelSpawnEgg;
+import com.ketheroth.hopshel.core.HopshelMod;
 import net.minecraft.item.BlockItem;
 import net.minecraft.item.Item;
 import net.minecraftforge.fml.RegistryObject;

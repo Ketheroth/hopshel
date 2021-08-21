@@ -1,15 +1,14 @@
-package com.nbrichau.hopshel.common.entity;
+package com.ketheroth.hopshel.common.entity;
 
-import com.nbrichau.hopshel.common.tileentity.BurrowTileEntity;
-import com.nbrichau.hopshel.core.registry.HopshelBlocks;
-import com.nbrichau.hopshel.core.registry.HopshelItems;
+import com.ketheroth.hopshel.common.tileentity.BurrowTileEntity;
+import com.ketheroth.hopshel.core.registry.HopshelBlocks;
+import com.ketheroth.hopshel.core.registry.HopshelItems;
 import mcp.MethodsReturnNonnullByDefault;
 import net.minecraft.enchantment.EnchantmentHelper;
 import net.minecraft.entity.*;
 import net.minecraft.entity.ai.attributes.AttributeModifierMap;
 import net.minecraft.entity.ai.attributes.Attributes;
 import net.minecraft.entity.item.ItemEntity;
-import net.minecraft.entity.passive.FoxEntity;
 import net.minecraft.entity.passive.TameableEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.Item;

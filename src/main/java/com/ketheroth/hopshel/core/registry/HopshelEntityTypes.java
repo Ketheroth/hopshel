@@ -1,7 +1,7 @@
-package com.nbrichau.hopshel.core.registry;
+package com.ketheroth.hopshel.core.registry;
 
-import com.nbrichau.hopshel.common.entity.HopshelEntity;
-import com.nbrichau.hopshel.core.HopshelMod;
+import com.ketheroth.hopshel.common.entity.HopshelEntity;
+import com.ketheroth.hopshel.core.HopshelMod;
 import net.minecraft.entity.EntityClassification;
 import net.minecraft.entity.EntityType;
 import net.minecraft.util.ResourceLocation;

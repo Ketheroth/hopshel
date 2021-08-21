@@ -1,7 +1,7 @@
-package com.nbrichau.hopshel.core.registry;
+package com.ketheroth.hopshel.core.registry;
 
-import com.nbrichau.hopshel.common.tileentity.BurrowTileEntity;
-import com.nbrichau.hopshel.core.HopshelMod;
+import com.ketheroth.hopshel.common.tileentity.BurrowTileEntity;
+import com.ketheroth.hopshel.core.HopshelMod;
 import net.minecraft.tileentity.TileEntityType;
 import net.minecraftforge.fml.RegistryObject;
 import net.minecraftforge.registries.DeferredRegister;

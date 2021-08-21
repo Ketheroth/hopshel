@@ -1,7 +1,7 @@
-package com.nbrichau.hopshel.common.item;
+package com.ketheroth.hopshel.common.item;
 
-import com.nbrichau.hopshel.core.HopshelMod;
-import com.nbrichau.hopshel.core.registry.HopshelEntityTypes;
+import com.ketheroth.hopshel.core.HopshelMod;
+import com.ketheroth.hopshel.core.registry.HopshelEntityTypes;
 import net.minecraft.block.BlockState;
 import net.minecraft.entity.SpawnReason;
 import net.minecraft.item.Item;
