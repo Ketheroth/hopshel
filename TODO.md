@@ -28,13 +28,14 @@
 -[x] killing hopshel drop all stored items
 
 # Helmet
--[ ] can place a helmet in their helmet slot
--[ ] helmet grant protection
--[ ] vacuum ability reduce to 2.5 wearing a helmet
--[ ] golden helmet have speed boost
--[ ] chainmail helmet remove the range tradeoff
--[ ] turtle helmet allow the hopshel to swim, using its back plates as paddles
--[ ] bucket as helmet disable vacuum effect, slower than normal
+-[x] can place a helmet in their helmet slot
+-[x] helmet grant protection
+-[x] vacuum ability reduce to 2.5 wearing a helmet
+-[x] golden helmet have speed boost
+-[x] chainmail helmet remove the range tradeoff
+-[x] turtle helmet allow the hopshel to swim, using its back plates as paddles
+-[x] bucket as helmet disable vacuum effect, slower than normal
+-[ ] render helmet on the entity
 
 # AI - Movement pattern
 -[ ] love to hop around and move nimbly
